@@ -1,0 +1,67 @@
+dashboards:
+- name: Stores_Sales_Analysis
+  label: Stores Sales Analysis
+  description: A dashboard to analyse Superstores sales
+  tiles:
+    - "6":
+        min:
+          w: 1
+          h: 1
+        max: {}
+        w: 4
+        h: 4
+        x: 0
+        y: 0
+        id: _h3s7bhm7a
+      id: _h3s7bhm7a
+      chartConfiguration:
+        configuration:
+          dataset: superstores_orders
+          mainDimension: Order Date
+          secondaryDimension: ""
+          mainDimensionType: TIMESTAMP_NS
+          mainMetric:
+            column: Sales
+            aggregation: sum
+          secondaryMetrics: []
+          orderByColumn: Order Date
+          orderByType: asc
+          seriesList:
+            - column: sum_Sales
+              type: line
+          dimensionOnXAxis: false
+          chartProperties:
+            chartLabel: "Evolution of # Orders"
+            chartDescription: ""
+        type: ui
+    - "6":
+        min:
+          w: 1
+          h: 1
+        max: {}
+        w: 2
+        h: 6
+        x: 4
+        y: 0
+        id: _98rjsfkdn
+      id: _98rjsfkdn
+      chartConfiguration:
+        configuration:
+          dataset: superstores_orders
+          mainDimension: State
+          secondaryDimension: ""
+          mainDimensionType: VARCHAR
+          mainMetric:
+            column: Sales
+            aggregation: sum
+          secondaryMetrics: []
+          orderByColumn: sum_Sales
+          orderByType: asc
+          seriesList:
+            - column: sum_Sales
+              type: bar
+          dimensionOnXAxis: true
+          chartProperties:
+            chartLabel: ∑ Sales per State
+            chartDescription: ""
+        type: ui

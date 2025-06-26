@@ -1,0 +1,4 @@
+data_sources:
+  - name: "superstores_orders"
+    label: "Superstores Orders"
+    path: "superstore.parquet"
