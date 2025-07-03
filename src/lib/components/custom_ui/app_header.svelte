@@ -15,7 +15,7 @@
 >
 	<div class="container flex h-14 max-w-screen-2xl items-center justify-between">
 		<!-- Left-aligned elements -->
-		<div class="mr-4 hidden md:flex pl-4">
+		<div class="mr-4 md:flex pl-4">
 			<!-- <Sidebar.Trigger /> -->
 			
 			<a 
@@ -37,6 +37,12 @@
 					class="hover:text-foreground/80 transition-colors"
 				>
 					Creation
+				</a>
+				<a
+					href="{base}/data_sources"
+					class="hover:text-foreground/80 transition-colors"
+				>
+					Data Sources
 				</a>
 			</nav>
 		</div>

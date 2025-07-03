@@ -35,23 +35,24 @@
         </div>
 
         <Tabs.Root bind:value={chartConfigurationType} onchange={switchEditor}>
-            <Sheet.Content class="overflow-y-auto overflow-x-clip h-full">
-                <Sheet.Header>
-                    <div class="w-[400px]">
+            <Sheet.Content 
+                class="h-full max-h-screen sm:h-auto w-screen sm:max-w-md"
+            >
+                <Sheet.Header class="flex-shrink-0">
                         <Tabs.List>
                             <Tabs.Trigger value="ui">UI Editor</Tabs.Trigger>
                             <Tabs.Trigger value="advanced">Advanced Editor</Tabs.Trigger>
                         </Tabs.List>
-                    </div>
                 </Sheet.Header>
+                <div class="flex-grow overflow-y-auto p-4">
+                    <Tabs.Content value="ui">
+                        <UiEditor bind:configuration={chartConfiguration.configuration} onSave={saveChart} />
+                    </Tabs.Content>
 
-                <Tabs.Content value="ui">
-                    <UiEditor bind:configuration={chartConfiguration.configuration} onSave={saveChart} />
-                </Tabs.Content>
-
-                <Tabs.Content value="advanced">
-                    <AdvancedEditor bind:configuration={chartConfiguration.configuration} onSave={saveChart} />
-                </Tabs.Content>
+                    <Tabs.Content value="advanced">
+                        <AdvancedEditor bind:configuration={chartConfiguration.configuration} onSave={saveChart} />
+                    </Tabs.Content>
+                </div>
             </Sheet.Content>
         </Tabs.Root>
     </Sheet.Root>

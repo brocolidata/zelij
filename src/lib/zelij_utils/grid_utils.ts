@@ -39,17 +39,6 @@ export function removeTile(items: any[], id: string, adjust = false): any[] {
   return adjust ? gridHelp.adjust(updated, COLS) : updated;
 }
 
-// export function updateTile(items: any[], updated: any): any[] {
-//   return items.map((item) =>
-//     item.id === updated.id
-//       ? {
-//           ...item,
-//           sqlQuery: updated.sqlQuery,
-//           chartOptions: updated.chartOptions,
-//         }
-//       : item
-//   );
-// }
 export function updateTile(items: any[], updated: any): any[] {
   return items.map((item) =>
     item.id === updated.id
@@ -61,6 +50,35 @@ export function updateTile(items: any[], updated: any): any[] {
   );
 }
 
+
+type UIChartConfiguration = {
+  dataset: string;
+  mainDimension: string;
+  mainDimensionType: string;
+  secondaryDimension?: string;
+  secondaryDimensionType?: string;
+  mainMetric: {
+    column: string;
+    aggregation: string;
+  };
+  secondaryMetrics?: [];
+  orderByColumn: string;
+  orderByType: 'asc' | 'desc';
+  seriesList: Array<{
+    column: string;
+    type: string;
+  }>;
+  dimensionOnXAxis: boolean;
+  chartProperties: {
+    chartLabel: string;
+    chartDescription: string;
+  };
+}
+
+type AdvancedChartConfiguration = {
+  sqlQuery: string;
+  chartOptions: object;
+} 
 
 type Layout = {
   x: number;
@@ -77,9 +95,21 @@ type Layout = {
 export type GridItem = {
   id: string;
   [key: number]: Layout;
-  chartConfiguration: object
+  chartConfiguration: {
+    configuration: UIChartConfiguration | AdvancedChartConfiguration;
+    type: 'ui' | 'advanced';
+  };
   // other props (like id, name, etc.) can go here if needed
 };
+
+
+export interface DashboardState {
+  name: string;
+  label: string;
+  description: string;
+  definition_source: string;
+  tiles: GridItem[];
+}
 
 export function toggleEditInTiles(
   items: GridItem[],
@@ -114,32 +144,48 @@ export function toggleEditInTiles(
 
 
 
-export interface DashboardState {
-  name: string;
-  label: string;
-  description: string;
-  definition_source: string;
-  tiles: GridItem[];
-}
-
-/**
-* Returns a deep copy of the dashboardState with all tiles
-* set to display mode (fixed, not resizable/draggable).
-*/
 export function getExportableDashboardState(
   state: DashboardState,
   cols: number
 ): DashboardState {
-  const editOnlyKeys = ['fixed', 'resizable', 'draggable', 'customDragger', 'customResizer'];
+  const editOnlyKeys = ['fixed', 'resizable', 'draggable', 'customDragger', 'customResizer', 'id'];
 
   const tiles = state.tiles.map((item) => {
+    // Process layout keys
+    // Ensure item[cols] is treated as Layout
+    const currentLayout = item[cols] as Layout; // Type assertion here
     const layout = Object.fromEntries(
-      Object.entries(item[cols]).filter(([key]) => !editOnlyKeys.includes(key))
+      Object.entries(currentLayout).filter(([key]) => !editOnlyKeys.includes(key))
     );
+
+    // Process chartConfiguration if it exists
+    let updatedChartConfiguration = { ...item.chartConfiguration };
+
+    // Type guard: Check if the configuration is a UIChartConfiguration
+    if (updatedChartConfiguration.type === 'ui' && updatedChartConfiguration.configuration) {
+      const uiConfig = updatedChartConfiguration.configuration as UIChartConfiguration; // Cast to UIChartConfiguration
+
+      // Create a mutable copy of the UI configuration
+      const mutableUiConfig: UIChartConfiguration = { ...uiConfig };
+
+      // Remove secondaryDimension if empty string
+      if (mutableUiConfig.secondaryDimension === "") {
+        delete mutableUiConfig.secondaryDimension;
+        delete mutableUiConfig?.secondaryDimensionType;
+      }
+
+      // Remove secondaryMetrics if empty array
+      if (Array.isArray(mutableUiConfig.secondaryMetrics) && mutableUiConfig.secondaryMetrics.length === 0) {
+        delete mutableUiConfig.secondaryMetrics;
+      }
+
+      updatedChartConfiguration.configuration = mutableUiConfig; // Assign the modified UI config back
+    }
 
     return {
       ...item,
       [cols]: layout,
+      chartConfiguration: updatedChartConfiguration, // Use the updated configuration
     };
   });
 

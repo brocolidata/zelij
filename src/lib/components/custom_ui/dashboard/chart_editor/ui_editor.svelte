@@ -17,6 +17,7 @@
     } from "$lib/zelij_utils/charts_utils";
     import { Separator } from "$lib/components/ui/separator/index.js";
     import { Label } from "$lib/components/ui/label/index.js";
+    import { getDataSourceByName, dataLoaded } from '$lib/zelij_utils/stores';
     
     let { configuration = $bindable(), onSave } = $props(); 
 
@@ -24,11 +25,7 @@
     const dataSourceOptions = getDataSourceOptions(data_sources);
     let chartProperties = $state(configuration?.chartProperties || {});
     let dataSource = $state(configuration?.dataset || "");
-    let columnOptionsPromise = $derived.by(async () => {
-        const cols = await fetchColumnOptions(dataSource);
-        return cols
-    })
-    let datasetColumns = $derived(columnOptionsPromise);
+    let datasetColumns = $derived(getDatasetColumns(dataSource));
     let mainDimension = $state(configuration?.mainDimension || "");
     let secondaryDimension = $state(configuration?.secondaryDimension || "");
     let mainDimensionType = $state(configuration?.mainDimensionType)
@@ -64,7 +61,6 @@
 	);
 
     // Series state
-    // let datasetColumns = $state([]);
     let chartDataColumns = $state([]);
 
     // Save dashboard state
@@ -89,10 +85,15 @@
             previousDataSource = dataSource
         }
     })
+
+    function getDatasetColumns(name) {
+        const dataSourceObj = getDataSourceByName(name);
+        return dataSourceObj.columns;
+    }
+
     // Function to refetch column options when dataSource changes
     async function updateColumns() {
         if (dataSource) {
-            columnOptionsPromise = await fetchColumnOptions(dataSource);
             // Reset dimensions when changing dataset
             mainDimension = "";
             mainDimensionType = "";
@@ -124,7 +125,6 @@
             seriesList,
             dimensionOnXAxis,
             chartProperties,
-            temp: {datasetColumns}
         }
         previousDataSource = dataSource
         onSave();
@@ -192,34 +192,32 @@
         <Separator />
     </div>
     {#if dataSource}
-        {#await columnOptionsPromise then columnOptions}
-            <ChartDimensions
-                {columnOptions}
-                bind:mainDimension
-                bind:secondaryDimension
-                bind:mainDimensionType
-                bind:secondaryDimensionType
-            />
+        <ChartDimensions
+            columnOptions={datasetColumns}
+            bind:mainDimension
+            bind:secondaryDimension
+            bind:mainDimensionType
+            bind:secondaryDimensionType
+        />
+        <div class="py-2">
+            <Separator />
+        </div>
+        <ChartMetrics
+            columnOptions={datasetColumns}
+            bind:mainMetric
+            bind:secondaryMetrics
+        />
+        {#if mainDimension && mainMetric?.column && mainMetric?.aggregation}
             <div class="py-2">
                 <Separator />
             </div>
-            <ChartMetrics
-                {columnOptions}
-                bind:mainMetric
-                bind:secondaryMetrics
+            <ChartOrder 
+                columnOptions={datasetColumns}
+                {chartDataColumns}
+                bind:orderByColumn
+                bind:orderByType
             />
-            {#if mainDimension && mainMetric?.column && mainMetric?.aggregation}
-                <div class="py-2">
-                    <Separator />
-                </div>
-                <ChartOrder 
-                    {columnOptions}
-                    {chartDataColumns}
-                    bind:orderByColumn
-                    bind:orderByType
-                />
-            {/if}
-        {/await}
+        {/if}
         {#if mainDimension && mainMetric?.column && mainMetric?.aggregation}
             <div class="py-2">
                 <Separator />

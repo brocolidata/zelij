@@ -116,3 +116,107 @@ export async function loadDataSync() {
         console.error("Failed to initialize app:", error);
     }
 }
+
+export async function fetchTableColumns(tableName: string) {
+    try {
+        const arrowTable = await getDataByQuery(`DESCRIBE ${tableName}`);
+        const results = arrowTable.toArray();
+        return results.map((col) => ({
+            label: col.column_name,
+            value: col.column_name,
+            type: col.column_type
+        }));
+    } catch (err) {
+        console.error("Failed to fetch column names:", err);
+        return [];
+    }
+}
+
+
+export async function getRowCount(tableName: string) {
+    if (!tableName) {
+        throw new Error("Table name must be provided to getRowCount.");
+    }
+    try {
+        // Construct the COUNT(*) query. Double-quote the table name for safety.
+        const countQuery = `SELECT COUNT(*) AS ROW_COUNT FROM "${tableName}";`;
+
+        // Use the existing getDataByQuery function
+        const arrowTable = await getDataByQuery(countQuery);
+
+        // Extract the count value from the Arrow Table
+        // The result of COUNT(*) will be a single row, single column Arrow Table
+        // if (arrowTable && arrowTable.numRows > 0 && arrowTable.schema.fields.length > 0) {
+        if (arrowTable && arrowTable.numRows > 0 && arrowTable.schema.fields.length > 0) {
+            // Get the value from the first row, first column
+            const count = arrowTable.get(0)["ROW_COUNT"];
+            return Number(count); // Ensure it's returned as a number
+        } else {
+            console.warn(`No count returned for table: ${tableName}. Query result was:`, arrowTable);
+            return 0; // Return 0 if no results or empty table
+        }
+    } catch (error) {
+        console.error(`Error getting row count for table ${tableName}:`, error);
+        throw error; // Re-throw to allow error handling in the calling component
+    }
+}
+
+function buildOrderByClause(sortingState) {
+    if (!sortingState || sortingState.length === 0) {
+        return ""; // No sorting applied
+    }
+
+    const orderByParts = sortingState.map(sort => {
+        const direction = sort.desc ? "DESC" : "ASC";
+        // Ensure column names are properly quoted if they contain spaces or special characters
+        // For DuckDB, often just enclosing in double quotes is sufficient.
+        return `"${sort.id}" ${direction}`;
+    });
+
+    return `ORDER BY ${orderByParts.join(", ")}`;
+}
+
+function buildSelectClause(columnVisibility) {
+    const excludedColumns = [];
+
+    // Iterate through the columnVisibility object
+    for (const columnName in columnVisibility) {
+        // Ensure it's an own property, not from the prototype chain
+        if (Object.prototype.hasOwnProperty.call(columnVisibility, columnName)) {
+            if (columnVisibility[columnName] === false) {
+                // If the column is marked as false (should be excluded),
+                // add its name to the list, double-quoted for DuckDB safety.
+                excludedColumns.push(`"${columnName}"`);
+            }
+        }
+    }
+    
+    if (excludedColumns.length === 0) {
+        return "SELECT *";
+    } else {
+        // Otherwise, use the EXCLUDE syntax
+        const excludedColumnsString = excludedColumns.join(", ");
+        return `SELECT * EXCLUDE(${excludedColumnsString})`;
+    }
+}
+
+export async function paginateData(tableName, columnVisibility, pagination, sorting) {
+    try {
+        const orderByClause = buildOrderByClause(sorting);
+        const offsetClause = pagination.pageIndex * pagination.pageSize;
+        const selectClause = buildSelectClause(columnVisibility);
+        const limitClause = pagination.pageSize;        
+        const sqlQuery = `
+            ${selectClause}
+            FROM "${tableName}"
+            ${orderByClause}
+            LIMIT ${limitClause}
+            OFFSET ${offsetClause};
+        `;
+        const results = await getDataByQuery(sqlQuery);
+        return results;
+    } catch (error) {
+        console.error(`Error querying ${tableName}:`, error);
+        throw error;
+    }
+}

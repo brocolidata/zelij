@@ -34,24 +34,26 @@
 </script>
 
 <Sheet.Root bind:open={isOpen}>
-<Sheet.Content >
-    <Sheet.Header>
-        <Sheet.Title>Configuration YAML</Sheet.Title>
-        <Sheet.Description>
-            You can copy/paste this to a Open Data Viz YAML file
-        </Sheet.Description>
-    </Sheet.Header>
-    <div class="px-2 py-6 overflow-auto h-96">
-        <YAMLEditor 
-            content={dashboardStateString} 
-            isReadOnly={true}
-        />
-    </div>
-    <Button variant="secondary" onclick={copyToClipboard}>
-        <Copy class="mr-2 size-4" />
-        Copy to clipboard
-    </Button>    
-    
-
-</Sheet.Content>
+    <Sheet.Content class="flex flex-col h-full">
+        <Sheet.Header>
+            <Sheet.Title>Configuration YAML</Sheet.Title>
+            <Sheet.Description>
+                You can copy/paste this to a Open Data Viz YAML file
+            </Sheet.Description>
+        </Sheet.Header>
+        <div class="flex-grow overflow-auto px-2 py-6 min-h-0">
+            <YAMLEditor
+                content={dashboardStateString}
+                isReadOnly={true}
+            />
+        </div>
+        <Button
+            class="flex items-center m-4 self-start"
+            variant="secondary"
+            onclick={copyToClipboard}
+        >
+            <Copy class="mr-2 size-4" />
+            Copy to clipboard
+        </Button>
+    </Sheet.Content>
 </Sheet.Root>

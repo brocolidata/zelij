@@ -64,7 +64,7 @@
 </script>
 
 <div
-    class="dashboard-bar bg-gray-200 dark:bg-gray-700 py-2 px-4 flex space-x-4"
+    class="dashboard-bar bg-gray-200 dark:bg-gray-700 py-2 px-4 flex flex-wrap space-x-4"
 >
     <Popover.Root>
         <Popover.Trigger class={buttonVariants({ variant: "secondary" })}>

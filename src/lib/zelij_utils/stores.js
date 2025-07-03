@@ -1,9 +1,11 @@
 import { get, writable } from 'svelte/store';
-import { getDashboards, getDataApps } from '$lib/zelij_utils/zelij_config'
+import { getDashboards, getDataApps, getDataSources } from '$lib/zelij_utils/zelij_config'
+import { fetchTableColumns } from "$lib/zelij_utils/duckdb";
 
 // Initial index state for dashboards, data sources
 export const dashboardsIndex = writable([]);
 export const dataAppsIndex = writable([]);
+export const dataSourcesIndex = writable([]);
 export const dataLoaded = writable(false);
 
 
@@ -35,20 +37,32 @@ export function initializeDataApps() {
   }
 }
 
+export function initializeDataSources() {
+  const initialStaticDataSources = getDataSources();
+  if (initialStaticDataSources && Array.isArray(initialStaticDataSources)) {
+    dataSourcesIndex.update((currentDataSources) => {
+      return [...currentDataSources, ...initialStaticDataSources];
+    });
+  } else {
+    console.warn("initializeDataSources called with non-array or empty initialStaticDataSources.");
+  }
+}
+
 export function initializeAppStores() {
   initializeDashboards();
   initializeDataApps();
+  initializeDataSources();
 }
 
 export function createDashboard(dashboard) {
   dashboardsIndex.update((currentDashboards) => {
-      // Check if the dashboard already exists (e.g., by name) to avoid duplicates
-      if (currentDashboards.some(d => d.name === dashboard.name)) {
-          console.warn(`Dashboard with name "${dashboard.name}" already exists.`);
-          return currentDashboards;
-      }
-      // Add the new dashboard to the list
-      return [...currentDashboards, dashboard];
+    // Check if the dashboard already exists (e.g., by name) to avoid duplicates
+    if (currentDashboards.some(d => d.name === dashboard.name)) {
+      console.warn(`Dashboard with name "${dashboard.name}" already exists.`);
+      return currentDashboards;
+    }
+    // Add the new dashboard to the list
+    return [...currentDashboards, dashboard];
   });
 }
 
@@ -64,14 +78,14 @@ export function dashboardNameExists(newDashboardName) {
 
 export function createDataApp(dataApp) {
   dataAppsIndex.update((currentDataApps) => {
-      // Check if the data app already exists (e.g., by name) to avoid duplicates
-      if (currentDataApps.some(da => da.name === dataApp.name)) {
-          console.warn(`Data app with name "${dataApp.name}" already exists.`);
-          return currentDataApps;
-      }
-      // Add the new data app to the list
-      console.log(`Successfully added ${dataApp.name} to dataAppsIndex`)
-      return [...currentDataApps, dataApp];
+    // Check if the data app already exists (e.g., by name) to avoid duplicates
+    if (currentDataApps.some(da => da.name === dataApp.name)) {
+      console.warn(`Data app with name "${dataApp.name}" already exists.`);
+      return currentDataApps;
+    }
+    // Add the new data app to the list
+    console.log(`Successfully added ${dataApp.name} to dataAppsIndex`)
+    return [...currentDataApps, dataApp];
   });
 }
 
@@ -225,6 +239,53 @@ export function updateDashboardsInDataApp(dataAppName, dashboardNames) {
 
     return updatedDataApps;
   });
+}
+
+export async function updateDataSourcesWithColumnTypes() {
+    // 1. Get the current value of the store
+    let currentDataSources = [];
+    dataSourcesIndex.subscribe(value => {
+        currentDataSources = value;
+    })(); // Call the unsubscribe function immediately to get the current value
+
+    // 2. Create a copy to work with
+    const updatedDataSources = [...currentDataSources];
+
+    // 3. Map over the data sources and create promises for fetching columns
+    const fetchPromises = updatedDataSources.map(async (dataSource) => {
+        // Ensure dataSource.name exists and is a string for fetchTableColumns
+        if (!dataSource.columns && typeof dataSource.name === 'string') {
+            try {
+                const columns = await fetchTableColumns(dataSource.name);
+                return {
+                    ...dataSource,
+                    columns // Assuming 'columns' is the property name for column types
+                };
+            } catch (error) {
+                console.error(`Failed to fetch columns for table ${dataSource.name}:`, error);
+                return {
+                    ...dataSource,
+                    columns: [] // Return empty array or handle error appropriately
+                };
+            }
+        }
+        return dataSource; // Return original if already has columns or name is not valid
+    });
+
+    // 4. Await all promises to resolve
+    const finalDataSources = await Promise.all(fetchPromises);
+
+    // 5. Update the store with the fully resolved data
+    dataSourcesIndex.set(finalDataSources);
+    // OR if you want to use update for some reason (less direct in this scenario):
+    // dataSourcesIndex.update(() => finalDataSources);
+
+    console.log("dataSourcesIndex updated with column types:", finalDataSources);
+}
+
+export function getDataSourceByName(name) {
+  const dataSources = get(dataSourcesIndex); // Get the current state of the store
+  return dataSources.find((dataSource) => dataSource.name === name) || {};
 }
 
 

@@ -64,7 +64,7 @@
 
 <DashboardFilterBar onRemoveFilter={(filterToRemove) => (removeFilterFromTile(filterToRemove))}/>
 <div class="flex items-center">
-    <h2 class="text-3xl font-bold tracking-tight p-4">{dashboardName}</h2>
+    <h2 class="text-3xl font-bold tracking-tight p-4">{dashboard.label}</h2>
     <!-- <div class="flex items-center space-x-2"> -->
     <DropdownMenu.Root>
         <DropdownMenu.Trigger class="{buttonVariants({ variant: "ghost", size:"icon" })} justify-center">

@@ -12,18 +12,15 @@ dashboards:
         h: 4
         x: 0
         y: 0
-        id: _h3s7bhm7a
       id: _h3s7bhm7a
       chartConfiguration:
         configuration:
           dataset: superstores_orders
           mainDimension: Order Date
-          secondaryDimension: ""
           mainDimensionType: TIMESTAMP_NS
           mainMetric:
             column: Sales
             aggregation: sum
-          secondaryMetrics: []
           orderByColumn: Order Date
           orderByType: asc
           seriesList:
@@ -43,18 +40,15 @@ dashboards:
         h: 6
         x: 4
         y: 0
-        id: _98rjsfkdn
       id: _98rjsfkdn
       chartConfiguration:
         configuration:
           dataset: superstores_orders
           mainDimension: State
-          secondaryDimension: ""
           mainDimensionType: VARCHAR
           mainMetric:
             column: Sales
             aggregation: sum
-          secondaryMetrics: []
           orderByColumn: sum_Sales
           orderByType: asc
           seriesList:

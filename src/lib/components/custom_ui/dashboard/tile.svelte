@@ -10,10 +10,11 @@
         fetchColumnOptions,
         buildChartQuery, 
         buildOptionsFromUI, 
-        extractDatasetFromChartConfiguration 
+        extractDatasetFromChartConfiguration,
+        addWhereStatement
     } from "$lib/zelij_utils/charts_utils";
     import { getContext } from 'svelte';
-    import { dataLoaded } from '$lib/zelij_utils/stores';
+    import { getDataSourceByName, dataLoaded } from '$lib/zelij_utils/stores';
 
 
     let { remove, dataItem = $bindable(), editMode, onUpdate } = $props();
@@ -26,15 +27,18 @@
     let initializedChart = $state(false);
     let filtersStore = getContext('filters');
     let chartFilters = $state([]);
+    let datasetColumns = $derived(getDatasetColumns(datasetName));
+
+    function getDatasetColumns(name) {
+        const dataSource = getDataSourceByName(name);
+        return dataSource.columns;
+    }
     
     onMount(async () => {
         datasetName = extractDatasetFromChartConfiguration(dataItem?.chartConfiguration);
         initChart();
-        // if (chartConfiguration?.type && $dataLoaded) {
-        if ($dataLoaded && datasetName) {
+        if (datasetName !== null && $dataLoaded) {
             await refreshTile();
-        } else {
-            chart.showLoading();
         }
         await tick();
         if (filtersStore) {
@@ -59,14 +63,24 @@
             });
         }    
         initializedChart = true;
+        
         return () => {
             unsubscribe?.();
             chart.dispose();
         };
     });
+    $effect(() => {
+        if ($dataLoaded && initializedChart === true) {
+            setupEventListeners();   
+        }
+    })
 
-    function initChart() {
-        chart = echarts.init(chartContainer, $mode === 'dark' ? 'dark' : undefined);
+    function getColumnTypeByName(columnName) {
+        const column = datasetColumns.find(col => col.value === columnName);
+        return column ? column.type : undefined;
+    }
+
+    function setupEventListeners() {
         chart.on('click', (params) => {
             console.log('chart clicked:', params);
             const dimensionCandidates = params.dimensionNames.filter(name => name !== params.seriesName);
@@ -77,6 +91,7 @@
                 tileID: dataItem?.id,
                 datasetName: datasetName,
                 column: filterDimension,
+                columnType: getColumnTypeByName(filterDimension),
                 value: filterValue,
                 dispatchEvent: {
                     seriesIndex:params.seriesIndex,
@@ -109,18 +124,27 @@
         });
     }
     
+    function initChart() {
+        chart = echarts.init(chartContainer, $mode === 'dark' ? 'dark' : undefined);
+        if (chartConfiguration?.type ) {
+            chart.showLoading();
+        }
+    }
+    
     function refreshQueryWithFilters(activeFilters) {
-        let sqlQuery;
+        let sqlQueryWFilters;
         let chartOptions;
         if (dataItem?.chartConfiguration.type === "ui") {
-            // sqlQuery = buildChartQuery(dataItem.chartConfiguration.configuration, dataItem.chartConfiguration.configuration.temp.datasetColumns, activeFilters);
-            sqlQuery = buildChartQuery(chartConfiguration.configuration, activeFilters);
+            sqlQueryWFilters = buildChartQuery(chartConfiguration.configuration, datasetColumns, activeFilters);
             chartOptions = buildOptionsFromUI(
                 {...dataItem?.chartConfiguration.configuration, theme:$mode})
         } else {
-            const { sqlQuery, chartOptions } = dataItem?.chartConfiguration.configuration;
+            const { sqlQuery, chartOptions: configChartOptions } = dataItem?.chartConfiguration.configuration;
+            sqlQueryWFilters = addWhereStatement(sqlQuery, datasetColumns, activeFilters);
+            chartOptions = configChartOptions;
+
         }
-		applyFiltersOnTile(sqlQuery, chartOptions);
+		applyFiltersOnTile(sqlQueryWFilters, chartOptions);
 	}
 
     export function unselect(filter) {
@@ -149,7 +173,6 @@
     async function reinitChart() {
         disposeOfChart();   // clean current chart
         await tick();
-        // chart = echarts.init(chartContainer, $mode === 'dark' ? 'dark' : undefined);
         initChart();
         await refreshTile();     // redraw the chart options
     }
@@ -219,9 +242,7 @@
             };
             chart.setOption(fullChartOptions);
         } else {
-            console.log('DEBUG chartConfiguration outside buildCharQuery : ');
-            console.log(chartConfiguration);
-            const sqlQuery = buildChartQuery(chartConfiguration.configuration);
+            const sqlQuery = buildChartQuery(chartConfiguration.configuration, datasetColumns);
             const rows = await getDatasetFromQuery(sqlQuery);
             const UIChartOptions = buildOptionsFromUI(
                 {...chartConfiguration.configuration, theme:$mode})
@@ -237,7 +258,7 @@
 
 </script>
 
-<div class="h-full w-full bg-card">
+<div class="h-full w-full flex flex-col bg-card">
     {#if editMode}
         <TileEditBar 
             remove={() => remove(dataItem)} 
@@ -248,7 +269,7 @@
 
     <div
         bind:this={chartContainer}
-        class="chart-container items-center justify-center h-full w-full "
+        class="chart-container items-center justify-center w-full flex-grow"
         use:resize onresized={resizeChart}
     ></div>
 </div>
