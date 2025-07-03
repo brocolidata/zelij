@@ -5,7 +5,7 @@
     import Combobox from "$custom_ui/combobox.svelte";
     import * as Collapsible from "$lib/components/ui/collapsible/index.js";
     import { aggregationOptions } from "$lib/zelij_utils/charts_utils";
-    import { ChevronDown, ChevronUp } from "@lucide/svelte";
+    import { ChevronDown, ChevronUp, Sigma } from "@lucide/svelte";
 
     let {
         columnOptions,
@@ -25,9 +25,12 @@
 <!-- Metrics Section -->
 <Collapsible.Root bind:open={collapsibleisOpen}>
     <div class="flex items-center justify-between space-x-4">
-        <h2 class="mt-4 mb-2 text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">
-            Metrics
-        </h2>
+        <div class="mt-4 mb-2 flex items-center gap-2">
+            <Sigma size={16} />
+            <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                Metrics
+            </h2>
+        </div>
         <Collapsible.Trigger
             class={buttonVariants({
                 variant: "ghost",

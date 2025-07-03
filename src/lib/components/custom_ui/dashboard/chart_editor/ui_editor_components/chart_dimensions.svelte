@@ -10,6 +10,7 @@
         Hash,
         CaseSensitive,
         CalendarDays,
+        Move3d
     } from "@lucide/svelte";
 
     let {
@@ -27,7 +28,7 @@
         TIMESTAMP_NS: CalendarDays,
     };
 
-    let displaySecondaryDimBox = $state(false);
+    let displaySecondaryDimBox = $state(secondaryDimension === "" ? false : true);
     let collapsibleisOpen = $state(true);
     let columnOptionsWithIcons = $derived(
         addIconsToColumnOptions(columnOptions, dataTypeIcons),
@@ -75,11 +76,14 @@
 <!-- UI -->
 <Collapsible.Root bind:open={collapsibleisOpen}>
     <div class="flex items-center justify-between space-x-4">
-        <h2
-            class="mt-4 mb-2 text-lg font-semibold text-gray-900 dark:text-gray-100"
-        >
-            Dimensions
-        </h2>
+        <div class="mt-4 mb-2 flex items-center gap-2">
+            <Move3d size={16}/>
+            <h2
+                class="text-lg font-semibold text-gray-900 dark:text-gray-100"
+            >
+                Dimensions
+            </h2>
+        </div>
         <Collapsible.Trigger
             class={buttonVariants({
                 variant: "ghost",
