@@ -27,7 +27,7 @@
         TIMESTAMP_NS: CalendarDays,
     };
 
-    let displaySecondaryDimBox = $state(false);
+    let displaySecondaryDimBox = $state(secondaryDimension === "" ? false : true);
     let collapsibleisOpen = $state(true);
     let columnOptionsWithIcons = $derived(
         addIconsToColumnOptions(columnOptions, dataTypeIcons),
