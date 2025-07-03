@@ -29,7 +29,8 @@ jobs:
       - name: build
         env:
           BASE_PATH: '/${{ github.event.repository.name }}'
-          ODV_CONFIG_FOLDER: '${{ github.workspace }}/odv_config'
+          ZELIJ_CONFIG_FOLDER: '${{ github.workspace }}/zelij_config'
+          ZELIJ_DATA_FOLDER: '${{ github.workspace }}/zelij_data'
         run: |
           npm run parse-config
           npm run build
