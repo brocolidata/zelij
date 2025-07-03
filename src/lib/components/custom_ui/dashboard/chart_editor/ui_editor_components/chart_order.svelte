@@ -3,7 +3,7 @@
     import Combobox from "$custom_ui/combobox.svelte";
     import * as Collapsible from "$lib/components/ui/collapsible/index.js";
     import { buttonVariants } from "$lib/components/ui/button/index.js";
-    import { ChevronDown, ChevronUp } from "@lucide/svelte";
+    import { ChevronDown, ChevronUp, ArrowDownUp } from "@lucide/svelte";
 
     let {
         columnOptions,
@@ -40,9 +40,12 @@
 
 <Collapsible.Root bind:open={collapsibleisOpen}>
     <div class="flex items-center justify-between space-x-4">
-        <h2 class="mt-4 mb-2 text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">
-            Order By
-        </h2>
+        <div class="mt-4 mb-2 flex items-center gap-2">
+            <ArrowDownUp size={16} />
+            <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                Order By
+            </h2>
+        </div>
         <Collapsible.Trigger
             class={buttonVariants({
                 variant: "ghost",

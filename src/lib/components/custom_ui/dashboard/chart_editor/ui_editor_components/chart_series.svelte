@@ -7,7 +7,7 @@
 	import { inferSeries, getDataColumnsOptions } from "$lib/zelij_utils/charts_utils";
 	import { buttonVariants } from "$lib/components/ui/button/index.js";
 	import * as Collapsible from "$lib/components/ui/collapsible/index.js";
-    import { ChevronDown, ChevronUp } from "@lucide/svelte";
+    import { ChevronDown, ChevronUp, ChartNoAxesCombined } from "@lucide/svelte";
 
 	let {
 		chartQueryParams,
@@ -55,7 +55,10 @@
 
 <Collapsible.Root bind:open={collapsibleisOpen}>
     <div class="flex items-center justify-between space-x-4">
-        <h2 class="mt-4 mb-2 text-lg font-semibold text-gray-900 dark:text-gray-100">Chart Series</h2>
+		<div class="mt-4 mb-2 flex items-center gap-2">
+			<ChartNoAxesCombined size={16} />
+			<h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Chart Series</h2>
+		</div>
         <Collapsible.Trigger
           class={buttonVariants({ variant: "ghost", size: "sm", class: "w-9 p-0" })}
         >
