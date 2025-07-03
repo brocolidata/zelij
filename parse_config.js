@@ -101,9 +101,11 @@ async function copyDataFiles() {
 async function processZelij() {
   try {
     // Step 1: Merge YAML configurations
-    console.log('Starting YAML configuration merge...');
+    console.log('Starting YAML parsing ...');
     const configs = await readYAMLFiles(configFolderPath);
+    console.log('Starting YAML configuration merge...');
     const mergedConfig = mergeConfigs(configs);
+    console.log('Writing to zelij_configuration.json...');
     await writeMergedConfig(mergedConfig);
 
     // Step 2: Copy data files
