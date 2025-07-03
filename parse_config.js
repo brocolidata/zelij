@@ -7,6 +7,7 @@ import * as yaml from 'yaml';
 
 // Define the environment variable name for the config folder
 const CONFIG_FOLDER_ENV_VAR = 'ZELIJ_CONFIG_FOLDER';
+const DATA_FOLDER_ENV_VAR = 'ZELIJ_DATA_FOLDER';
 
 // Define the folder containing the YAML files and output location
 // Determine the configuration folder path
@@ -16,7 +17,10 @@ const configFolderPath = process.env[CONFIG_FOLDER_ENV_VAR]
 const outputFilePath = path.join(process.cwd(), 'static/config/zelij_configuration.json');
 
 // Define the source and destination paths for data files
-const dataFolderPath = path.join(process.cwd(), 'zelij_data');
+// const dataFolderPath = path.join(process.cwd(), 'zelij_data');
+const dataFolderPath = process.env[DATA_FOLDER_ENV_VAR]
+  ? path.resolve(process.cwd(), process.env[DATA_FOLDER_ENV_VAR])
+  : path.join(process.cwd(), 'zelij_data');
 const staticDataFolderPath = path.join(process.cwd(), 'static/data');
 
 // Define the high-level keys that should be merged as arrays
