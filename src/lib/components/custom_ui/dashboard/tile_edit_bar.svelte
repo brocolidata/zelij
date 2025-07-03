@@ -9,7 +9,7 @@
         chartConfiguration = $bindable(),
         onSave
     } = $props();
-    let chartConfigurationType = $state("advanced");
+    let chartConfigurationType = $state(chartConfiguration?.type || "ui");
 
     function saveChart() {
         chartConfiguration.type = chartConfigurationType;
