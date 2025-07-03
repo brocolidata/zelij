@@ -33,7 +33,7 @@
     let mainMetric = $state(configuration?.mainMetric || { column: "", aggregation: "" });
     let secondaryMetrics = $state(configuration?.secondaryMetrics || []);
     let orderByColumn = $state(configuration?.orderByColumn || "");
-    let orderByType = $state(configuration?.orderByColumn || "desc");
+    let orderByType = $state(configuration?.orderByType || "desc");
     let seriesList = $state(configuration?.seriesList || []);
     let dimensionOnXAxis = $state(configuration?.dimensionOnXAxis ?? true);
     // svelte-ignore state_referenced_locally
