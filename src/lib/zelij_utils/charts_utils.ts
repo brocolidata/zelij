@@ -1,4 +1,5 @@
 import { getDataByQuery } from "./duckdb";
+import { getDatasetColumns } from "./stores";
 
 export const aggregationOptions = [
     { label: "Sum", value: "sum" },
@@ -8,20 +9,6 @@ export const aggregationOptions = [
     { label: "Max", value: "max" }
 ];
 
-export async function fetchColumnOptions(tableName) {
-    try {
-        const arrowTable = await getDataByQuery(`DESCRIBE ${tableName}`);
-        const results = arrowTable.toArray();
-        return results.map((col) => ({
-            label: col.column_name,
-            value: col.column_name,
-            type: col.column_type
-        }));
-    } catch (err) {
-        console.error("Failed to fetch column names:", err);
-        return [];
-    }
-}
 
 export function getDataSourceOptions(data_sources) {
     return data_sources.map((source) => ({
@@ -85,8 +72,9 @@ type Metric = {
 
 type QueryParams = {
     dataset: string;
-    mainDimension?: string;
-    secondaryDimension?: string;
+    dimensions: {
+        main: string, secondary: string
+    } 
     mainMetric?: Metric;
     secondaryMetrics?: Metric[];
 };
@@ -154,8 +142,7 @@ function getWhereClauseForUI(
 export function buildChartQuery(
     {
         dataset,
-        mainDimension,
-        secondaryDimension,
+        dimensions,
         mainMetric,
         secondaryMetrics = [],
         orderByColumn,
@@ -165,6 +152,8 @@ export function buildChartQuery(
     filters: { column: string; value: any }[] = [],
 ): string {
     if (!dataset || !mainMetric?.column) return "-- Invalid configuration";
+    const mainDimension = dimensions?.main;
+    const secondaryDimension = dimensions?.secondary;
 
     const hasMainDim = !!mainDimension;
     const hasSecondaryDim = !!secondaryDimension;
@@ -240,11 +229,20 @@ export async function runChartQuery(chartQuery) {
     }
 }
 
+export function getColumnType(datasetName, columnName) {
+    console.log('DEBUG getColumnType | datasetName: ', datasetName);
+    console.log('DEBUG getColumnType | columnName: ', columnName);
+    const datasetColumns = getDatasetColumns(datasetName);
+    if (!datasetColumns) {
+        return undefined;
+    }
+    const column = datasetColumns.find(col => col.value === columnName);
+    return column ? column.type : undefined;
+}
+
 export function buildOptionsFromUI({
-    mainDimension,
-    secondaryDimension,
-    mainDimensionType,
-    secondaryDimensionType,
+    dataset,
+    dimensions,
     mainMetric,
     secondaryMetrics,
     seriesList,
@@ -252,6 +250,10 @@ export function buildOptionsFromUI({
     chartProperties,
     theme = 'light' // default to light mode
 }) {
+    const mainDimension = dimensions?.main;
+    const secondaryDimension = dimensions?.secondary;
+    const mainDimensionType = getColumnType(dataset, mainDimension);
+    const secondaryDimensionType = getColumnType(dataset, secondaryDimension);
     if (!mainDimension || !mainMetric || !seriesList) {
         return {};
     }

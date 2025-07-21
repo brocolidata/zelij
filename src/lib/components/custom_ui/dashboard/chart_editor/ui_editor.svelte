@@ -10,14 +10,13 @@
     import * as Alert from "$lib/components/ui/alert/index.js";
     import { CircleAlert, Check, Save } from "@lucide/svelte";
     import {
-        fetchColumnOptions,
         getDataSourceOptions,
         buildChartQuery,
         runChartQuery
     } from "$lib/zelij_utils/charts_utils";
     import { Separator } from "$lib/components/ui/separator/index.js";
     import { Label } from "$lib/components/ui/label/index.js";
-    import { getDataSourceByName, dataLoaded } from '$lib/zelij_utils/stores';
+    import { dataLoaded, getDatasetColumns } from '$lib/zelij_utils/stores';
     
     let { configuration = $bindable(), onSave } = $props(); 
 
@@ -26,10 +25,7 @@
     let chartProperties = $state(configuration?.chartProperties || {});
     let dataSource = $state(configuration?.dataset || "");
     let datasetColumns = $derived(getDatasetColumns(dataSource));
-    let mainDimension = $state(configuration?.mainDimension || "");
-    let secondaryDimension = $state(configuration?.secondaryDimension || "");
-    let mainDimensionType = $state(configuration?.mainDimensionType)
-    let secondaryDimensionType = $state(configuration?.secondaryDimensionType)
+    let dimensionConfiguration = $state(configuration?.dimensions || {});
     let mainMetric = $state(configuration?.mainMetric || { column: "", aggregation: "" });
     let secondaryMetrics = $state(configuration?.secondaryMetrics || []);
     let orderByColumn = $state(configuration?.orderByColumn || "");
@@ -45,14 +41,13 @@
     // Inputs assembly states
     let queryInputsValid = $derived(() =>
 		dataSource &&
-		mainDimension &&
+        dimensionConfiguration?.main &&
 		(mainMetric?.column && mainMetric?.aggregation ||
 		secondaryMetrics.some(m => m.column && m.aggregation))
 	);
     let chartQueryParams = $derived({
 		dataset: dataSource,
-		mainDimension: mainDimension,
-		secondaryDimension: secondaryDimension,
+        dimensions: dimensionConfiguration,
 		mainMetric: mainMetric,
 		secondaryMetrics: secondaryMetrics
 	});
@@ -72,7 +67,7 @@
 
     // Refresh configIsInvalid
     $effect(() => {
-        configIsInvalid = secondaryDimension !== "" && secondaryMetrics.length > 0;
+        configIsInvalid = dimensionConfiguration?.secondary !== "" && secondaryMetrics.length > 0;
         disableSave = configIsInvalid;
     });
     $effect(() => {
@@ -86,19 +81,13 @@
         }
     })
 
-    function getDatasetColumns(name) {
-        const dataSourceObj = getDataSourceByName(name);
-        return dataSourceObj.columns;
-    }
-
     // Function to refetch column options when dataSource changes
     async function updateColumns() {
         if (dataSource) {
             // Reset dimensions when changing dataset
-            mainDimension = "";
-            mainDimensionType = "";
-            secondaryDimension = "";
-            secondaryDimensionType = "";
+            dimensionConfiguration = {
+                main: "", secondary: "", 
+            };
         }
     }
 
@@ -114,10 +103,7 @@
         
         configuration = {
             dataset: dataSource,
-            mainDimension,
-            secondaryDimension,
-            mainDimensionType,
-            secondaryDimensionType,
+            dimensions: dimensionConfiguration,
             mainMetric,
             secondaryMetrics,
             orderByColumn,
@@ -138,11 +124,7 @@
         }, 2000);
 
         isSaving = false;
-    }
-
-    $inspect(mainDimensionType);
-    $inspect(secondaryDimensionType);
-        
+    }   
    
 </script>
 
@@ -194,10 +176,7 @@
     {#if dataSource}
         <ChartDimensions
             columnOptions={datasetColumns}
-            bind:mainDimension
-            bind:secondaryDimension
-            bind:mainDimensionType
-            bind:secondaryDimensionType
+            bind:dimensionConfiguration
         />
         <div class="py-2">
             <Separator />
@@ -207,7 +186,7 @@
             bind:mainMetric
             bind:secondaryMetrics
         />
-        {#if mainDimension && mainMetric?.column && mainMetric?.aggregation}
+         {#if dimensionConfiguration?.main && mainMetric?.column && mainMetric?.aggregation}
             <div class="py-2">
                 <Separator />
             </div>
@@ -218,7 +197,7 @@
                 bind:orderByType
             />
         {/if}
-        {#if mainDimension && mainMetric?.column && mainMetric?.aggregation}
+        {#if dimensionConfiguration?.main && mainMetric?.column && mainMetric?.aggregation}
             <div class="py-2">
                 <Separator />
             </div>

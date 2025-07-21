@@ -7,14 +7,13 @@
     import TileEditBar from "$custom_ui/dashboard/tile_edit_bar.svelte";
     import { mode, userPrefersMode } from "mode-watcher";
     import { 
-        fetchColumnOptions,
         buildChartQuery, 
         buildOptionsFromUI, 
         extractDatasetFromChartConfiguration,
         addWhereStatement
     } from "$lib/zelij_utils/charts_utils";
     import { getContext } from 'svelte';
-    import { getDataSourceByName, dataLoaded } from '$lib/zelij_utils/stores';
+    import { getDatasetColumns, dataLoaded } from '$lib/zelij_utils/stores';
 
 
     let { remove, dataItem = $bindable(), editMode, onUpdate } = $props();
@@ -28,11 +27,6 @@
     let filtersStore = getContext('filters');
     let chartFilters = $state([]);
     let datasetColumns = $derived(getDatasetColumns(datasetName));
-
-    function getDatasetColumns(name) {
-        const dataSource = getDataSourceByName(name);
-        return dataSource.columns;
-    }
     
     onMount(async () => {
         datasetName = extractDatasetFromChartConfiguration(dataItem?.chartConfiguration);

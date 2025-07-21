@@ -53,10 +53,9 @@ export function updateTile(items: any[], updated: any): any[] {
 
 type UIChartConfiguration = {
   dataset: string;
-  mainDimension: string;
-  mainDimensionType: string;
-  secondaryDimension?: string;
-  secondaryDimensionType?: string;
+  dimensions: {
+    main: string; secondary: string;
+  };
   mainMetric: {
     column: string;
     aggregation: string;
@@ -169,9 +168,8 @@ export function getExportableDashboardState(
       const mutableUiConfig: UIChartConfiguration = { ...uiConfig };
 
       // Remove secondaryDimension if empty string
-      if (mutableUiConfig.secondaryDimension === "") {
-        delete mutableUiConfig.secondaryDimension;
-        delete mutableUiConfig?.secondaryDimensionType;
+      if (mutableUiConfig.dimensions?.secondary === "") {
+        delete mutableUiConfig.dimensions.secondary;
       }
 
       // Remove secondaryMetrics if empty array

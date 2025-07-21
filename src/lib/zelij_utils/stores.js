@@ -288,6 +288,11 @@ export function getDataSourceByName(name) {
   return dataSources.find((dataSource) => dataSource.name === name) || {};
 }
 
+export function getDatasetColumns(name) {
+    const dataSourceObj = getDataSourceByName(name);
+    return dataSourceObj.columns;
+}
+
 
 export function createFiltersStore() {
   return writable([]);

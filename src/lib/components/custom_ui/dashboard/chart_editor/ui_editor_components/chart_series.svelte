@@ -16,8 +16,8 @@
 		queryInputsValid,
 		dimensionOnXAxis = $bindable(),
 	} = $props();
-	let mainDimension = $derived(chartQueryParams.mainDimension);
-	let secondaryDimension = $derived(chartQueryParams.secondaryDimension);
+	let mainDimension = $derived(chartQueryParams.dimensions.main);
+	let secondaryDimension = $derived(chartQueryParams.dimensions.secondary);
 	let mainMetric = $derived(chartQueryParams.mainMetric);
 	let secondaryMetrics = $derived(chartQueryParams.secondaryMetrics);
 	let columnOptions = $derived(getDataColumnsOptions(chartDataColumns));
