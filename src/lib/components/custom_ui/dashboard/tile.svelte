@@ -21,7 +21,7 @@
     let chart = $state();
     let chartContainer = $state();
     let datasetRows = writable([]);
-    let chartConfiguration = $state(dataItem?.chartConfiguration || {});
+    let chartConfiguration = $state(dataItem?.chart || {});
     let datasetName = $state();
     let initializedChart = $state(false);
     let filtersStore = getContext('filters');
@@ -29,7 +29,7 @@
     let datasetColumns = $derived(getDatasetColumns(datasetName));
     
     onMount(async () => {
-        datasetName = extractDatasetFromChartConfiguration(dataItem?.chartConfiguration);
+        datasetName = extractDatasetFromChartConfiguration(dataItem?.chart);
         initChart();
         if (datasetName !== null && $dataLoaded) {
             await refreshTile();
@@ -128,12 +128,12 @@
     function refreshQueryWithFilters(activeFilters) {
         let sqlQueryWFilters;
         let chartOptions;
-        if (dataItem?.chartConfiguration.type === "ui") {
+        if (dataItem?.chart.type === "ui") {
             sqlQueryWFilters = buildChartQuery(chartConfiguration.configuration, datasetColumns, activeFilters);
             chartOptions = buildOptionsFromUI(
-                {...dataItem?.chartConfiguration.configuration, theme:$mode})
+                {...dataItem?.chart.configuration, theme:$mode})
         } else {
-            const { sqlQuery, chartOptions: configChartOptions } = dataItem?.chartConfiguration.configuration;
+            const { sqlQuery, chartOptions: configChartOptions } = dataItem?.chart.configuration;
             sqlQueryWFilters = addWhereStatement(sqlQuery, datasetColumns, activeFilters);
             chartOptions = configChartOptions;
 

@@ -44,7 +44,7 @@ export function updateTile(items: any[], updated: any): any[] {
     item.id === updated.id
       ? {
           ...item,
-          chartConfiguration: updated.chartConfiguration, // <-- NEW
+          chart: updated.chartConfiguration, // <-- NEW
         }
       : item
   );
@@ -99,7 +99,7 @@ type Layout = {
 export type GridItem = {
   id: string;
   [key: number]: Layout;
-  chartConfiguration: {
+  chart: {
     configuration: UIChartConfiguration | AdvancedChartConfiguration;
     type: 'ui' | 'advanced';
   };
@@ -163,7 +163,7 @@ export function getExportableDashboardState(
     );
 
     // Process chartConfiguration if it exists
-    let updatedChartConfiguration = { ...item.chartConfiguration };
+    let updatedChartConfiguration = { ...item.chart };
 
     // Type guard: Check if the configuration is a UIChartConfiguration
     if (updatedChartConfiguration.type === 'ui' && updatedChartConfiguration.configuration) {
@@ -193,7 +193,7 @@ export function getExportableDashboardState(
     return {
       ...item,
       [cols]: layout,
-      chartConfiguration: updatedChartConfiguration, // Use the updated configuration
+      chart: updatedChartConfiguration, // Use the updated configuration
     };
   });
 
