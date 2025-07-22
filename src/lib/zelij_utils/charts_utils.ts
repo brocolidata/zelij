@@ -255,7 +255,7 @@ export function buildOptionsFromUI({
     metrics,
     series,
     dimension_on_Y_axis,
-    chartProperties,
+    properties,
     theme = 'light' // default to light mode
 }) {
     const mainDimension = dimensions?.main;
@@ -296,8 +296,8 @@ export function buildOptionsFromUI({
             left: 2
         },
         title: {
-            text: chartProperties?.chartLabel || '',
-            subtext: chartProperties?.chartDescription || '',
+            text: properties?.label || '',
+            subtext: properties?.description || '',
             left: 'center'
         },
         tooltip: {

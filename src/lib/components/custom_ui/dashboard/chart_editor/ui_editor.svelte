@@ -22,7 +22,7 @@
 
     const data_sources = getDataSources();
     const dataSourceOptions = getDataSourceOptions(data_sources);
-    let chartProperties = $state(configuration?.chartProperties || {});
+    let chartProperties = $state(configuration?.properties || {});
     let dataSource = $state(configuration?.dataset || "");
     let datasetColumns = $derived(getDatasetColumns(dataSource));
     let dimensionConfiguration = $state(configuration?.dimensions || {});
@@ -60,7 +60,7 @@
     let disableSave = $state(false);
     let saveSuccess = $state(false);
     let isSaving = $state(false);
-    let chartLabel = $derived(chartProperties?.chartLabel)
+    let chartLabel = $derived(chartProperties?.label)
     let isChartLabelEmpty = $state(true);
 
     // Refresh configIsInvalid
@@ -110,7 +110,7 @@
             order_by: orderByConfiguration,
             series: seriesConfiguration,
             dimension_on_Y_axis: dimensionOnYAxis,
-            chartProperties,
+            properties: chartProperties,
         }
         previousDataSource = dataSource
         onSave();

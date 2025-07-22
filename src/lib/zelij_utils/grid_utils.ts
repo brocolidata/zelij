@@ -73,9 +73,9 @@ type UIChartConfiguration = {
     type: string;
   }>;
   dimension_on_Y_axis: boolean;
-  chartProperties: {
-    chartLabel: string;
-    chartDescription: string;
+  properties: {
+    label: string;
+    description: string;
   };
 }
 
