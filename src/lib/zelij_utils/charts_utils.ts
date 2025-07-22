@@ -253,7 +253,7 @@ export function buildOptionsFromUI({
     dataset,
     dimensions,
     metrics,
-    seriesList,
+    series,
     dimensionOnXAxis,
     chartProperties,
     theme = 'light' // default to light mode
@@ -264,7 +264,7 @@ export function buildOptionsFromUI({
     const secondaryDimensionType = getColumnType(dataset, secondaryDimension);
     const mainMetric = metrics.main;
     const secondaryMetrics = metrics?.secondary || [];
-    if (!mainDimension || !mainMetric || !seriesList) {
+    if (!mainDimension || !mainMetric || !series) {
         return {};
     }
 
@@ -317,7 +317,7 @@ export function buildOptionsFromUI({
                 width: 200
             }
         },
-        series: seriesList.map((series) => ({
+        series: series.map((series) => ({
             type: series.type || 'bar',
             name: series.column,
             encode: {

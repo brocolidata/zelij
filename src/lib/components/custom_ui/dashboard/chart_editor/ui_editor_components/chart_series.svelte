@@ -12,12 +12,12 @@
 	let {
 		chartQueryParams,
 		chartDataColumns,
-		seriesList = $bindable(),
+		seriesConfiguration = $bindable(),
 		queryInputsValid,
 		dimensionOnXAxis = $bindable(),
 	} = $props();
 	let mainDimension = $derived(chartQueryParams.dimensions.main);
-	let secondaryDimension = $derived(chartQueryParams.dimensions.secondary);
+	let secondaryDimension = $derived(chartQueryParams.dimensions?.secondary);
 	let mainMetric = $derived(chartQueryParams.metrics.main);
 	let secondaryMetrics = $derived(chartQueryParams.metrics?.secondary);
 	let columnOptions = $derived(getDataColumnsOptions(chartDataColumns));
@@ -25,14 +25,14 @@
 
 	// Generate series when inputs are valid
     $effect(() => {
-		if (queryInputsValid && seriesList.length === 0 && chartDataColumns.length > 0) {
+		if (queryInputsValid && seriesConfiguration.length === 0 && chartDataColumns.length > 0) {
 			generateSeries()
 		}
 	});
     
     // Series functions 
     function generateSeries() {
-		seriesList = inferSeries({
+		seriesConfiguration = inferSeries({
 			mainDimension,
 			secondaryDimension,
 			mainMetric,
@@ -42,11 +42,11 @@
 	}
 
 	function removeSeries(index) {
-		seriesList = seriesList.filter((_, i) => i !== index);
+		seriesConfiguration = seriesConfiguration.filter((_, i) => i !== index);
 	}
 
 	function addSeries() {
-		seriesList = [...seriesList, { column: "", type: "line" }];
+		seriesConfiguration = [...seriesConfiguration, { column: "", type: "line" }];
 	}
 
 	
@@ -81,9 +81,9 @@
 				<Label>Y axis</Label>
 			</div>
 			<div class="flex flex-col space-y-3">
-				{#each seriesList as series, i (i)}
+				{#each seriesConfiguration as series, i (i)}
 					<ChartSeriesItem
-						bind:series={seriesList[i]}
+						bind:series={seriesConfiguration[i]}
 						{columnOptions}
 						onRemove={() => removeSeries(i)}
 					/>

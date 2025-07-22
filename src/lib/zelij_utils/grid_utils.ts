@@ -68,7 +68,7 @@ type UIChartConfiguration = {
     column: string;
     type: "asc" | "desc";
   };
-  seriesList: Array<{
+  series: Array<{
     column: string;
     type: string;
   }>;

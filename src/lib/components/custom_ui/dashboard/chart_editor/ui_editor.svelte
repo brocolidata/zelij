@@ -28,7 +28,7 @@
     let dimensionConfiguration = $state(configuration?.dimensions || {});
     let metricConfiguration = $state(configuration?.metrics || {main: {column: "", aggregation: ""}, secondary: []});
     let orderByConfiguration = $state(configuration?.order_by || {column: "", type: ""});
-    let seriesList = $state(configuration?.seriesList || []);
+    let seriesConfiguration = $state(configuration?.series || []);
     let dimensionOnXAxis = $state(configuration?.dimensionOnXAxis ?? false);
     // svelte-ignore state_referenced_locally
     let previousDataSource = $state(dataSource);
@@ -108,7 +108,7 @@
             dimensions: dimensionConfiguration,
             metrics: metricConfiguration,
             order_by: orderByConfiguration,
-            seriesList,
+            series: seriesConfiguration,
             dimensionOnXAxis,
             chartProperties,
         }
@@ -202,7 +202,7 @@
             <ChartSeries
                 {chartQueryParams}
                 {chartDataColumns} 
-                bind:seriesList
+                bind:seriesConfiguration
                 {queryInputsValid}
                 bind:dimensionOnXAxis
             />
