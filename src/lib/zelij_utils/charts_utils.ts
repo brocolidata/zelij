@@ -254,7 +254,7 @@ export function buildOptionsFromUI({
     dimensions,
     metrics,
     series,
-    dimensionOnXAxis,
+    dimension_on_Y_axis,
     chartProperties,
     theme = 'light' // default to light mode
 }) {
@@ -268,8 +268,8 @@ export function buildOptionsFromUI({
         return {};
     }
 
-    const xAxisField = dimensionOnXAxis ? mainDimension : mainMetric.column;
-    const yAxisField = dimensionOnXAxis ? mainMetric.column : mainDimension;
+    const xAxisField = dimension_on_Y_axis ? mainDimension : mainMetric.column;
+    const yAxisField = dimension_on_Y_axis ? mainMetric.column : mainDimension;
 
     // Define theme-aware selection style
     const selectItemStyle = {
@@ -307,11 +307,11 @@ export function buildOptionsFromUI({
             top: 'bottom'
         },
         xAxis: {
-            type: dimensionOnXAxis ? 'value' : dimensionAxisType,
+            type: dimension_on_Y_axis ? 'value' : dimensionAxisType,
             name: xAxisField
         },
         yAxis: {
-            type: dimensionOnXAxis ? dimensionAxisType : 'value',
+            type: dimension_on_Y_axis ? dimensionAxisType : 'value',
             name: yAxisField,
             axisLabel: {
                 width: 200
@@ -321,8 +321,8 @@ export function buildOptionsFromUI({
             type: series.type || 'bar',
             name: series.column,
             encode: {
-                x: dimensionOnXAxis ? series.column : mainDimension,
-                y: dimensionOnXAxis ? mainDimension : series.column,
+                x: dimension_on_Y_axis ? series.column : mainDimension,
+                y: dimension_on_Y_axis ? mainDimension : series.column,
             },
             select: {
                 itemStyle: selectItemStyle

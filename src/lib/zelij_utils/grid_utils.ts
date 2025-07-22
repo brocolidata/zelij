@@ -72,7 +72,7 @@ type UIChartConfiguration = {
     column: string;
     type: string;
   }>;
-  dimensionOnXAxis: boolean;
+  dimension_on_Y_axis: boolean;
   chartProperties: {
     chartLabel: string;
     chartDescription: string;
@@ -180,6 +180,11 @@ export function getExportableDashboardState(
       // Remove secondaryMetrics if empty array
       if (Array.isArray(mutableUiConfig.metrics?.secondary) && mutableUiConfig.metrics?.secondary.length === 0) {
         delete mutableUiConfig.metrics.secondary;
+      }
+
+      // Remove dimension_on_Y_axis if false
+      if (mutableUiConfig.dimension_on_Y_axis === false) {
+        delete mutableUiConfig.dimension_on_Y_axis;
       }
 
       updatedChartConfiguration.configuration = mutableUiConfig; // Assign the modified UI config back

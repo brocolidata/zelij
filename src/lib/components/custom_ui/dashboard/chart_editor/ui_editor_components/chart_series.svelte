@@ -14,7 +14,7 @@
 		chartDataColumns,
 		seriesConfiguration = $bindable(),
 		queryInputsValid,
-		dimensionOnXAxis = $bindable(),
+		dimensionOnYAxis = $bindable(),
 	} = $props();
 	let mainDimension = $derived(chartQueryParams.dimensions.main);
 	let secondaryDimension = $derived(chartQueryParams.dimensions?.secondary);
@@ -77,7 +77,7 @@
 			<div class="flex space-x-2">
 				<Label>Dimension on</Label>
 				<Label>X axis</Label>
-				<Switch bind:checked={dimensionOnXAxis}/>
+				<Switch bind:checked={dimensionOnYAxis}/>
 				<Label>Y axis</Label>
 			</div>
 			<div class="flex flex-col space-y-3">

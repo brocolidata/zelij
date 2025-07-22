@@ -29,7 +29,7 @@
     let metricConfiguration = $state(configuration?.metrics || {main: {column: "", aggregation: ""}, secondary: []});
     let orderByConfiguration = $state(configuration?.order_by || {column: "", type: ""});
     let seriesConfiguration = $state(configuration?.series || []);
-    let dimensionOnXAxis = $state(configuration?.dimensionOnXAxis ?? false);
+    let dimensionOnYAxis = $state(configuration?.dimension_on_Y_axis ?? false);
     // svelte-ignore state_referenced_locally
     let previousDataSource = $state(dataSource);
 
@@ -109,7 +109,7 @@
             metrics: metricConfiguration,
             order_by: orderByConfiguration,
             series: seriesConfiguration,
-            dimensionOnXAxis,
+            dimension_on_Y_axis: dimensionOnYAxis,
             chartProperties,
         }
         previousDataSource = dataSource
@@ -204,7 +204,7 @@
                 {chartDataColumns} 
                 bind:seriesConfiguration
                 {queryInputsValid}
-                bind:dimensionOnXAxis
+                bind:dimensionOnYAxis
             />
             <Button 
                 variant="secondary" 
