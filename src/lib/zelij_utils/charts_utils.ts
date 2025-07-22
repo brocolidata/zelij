@@ -79,6 +79,11 @@ type QueryParams = {
         main: Metric;
         secondary?: Metric[];
     };
+    order_by: {
+        column: string;
+        type: "asc" | "desc";
+    }
+    
 };
 
 function getWhereClauseForUI(
@@ -146,8 +151,7 @@ export function buildChartQuery(
         dataset,
         dimensions,
         metrics,
-        orderByColumn,
-        orderByType,
+        order_by,
     }: QueryParams,
     datasetColumns: { label: string, value: string, type: string }[] = [],
     filters: { column: string; value: any }[] = [],
@@ -157,6 +161,8 @@ export function buildChartQuery(
     const secondaryDimension = dimensions?.secondary;
     const mainMetric = metrics.main;
     const secondaryMetrics = metrics?.secondary || [];
+    const orderByColumn = order_by.column;
+    const orderByType = order_by.type;
 
     const hasMainDim = !!mainDimension;
     const hasSecondaryDim = !!secondaryDimension;

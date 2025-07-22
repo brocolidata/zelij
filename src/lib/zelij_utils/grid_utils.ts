@@ -64,11 +64,10 @@ type UIChartConfiguration = {
     main: Metric;
     secondary?: Metric[];
   };
+  order_by: {
     column: string;
-    aggregation: string;
+    type: "asc" | "desc";
   };
-  orderByColumn: string;
-  orderByType: 'asc' | 'desc';
   seriesList: Array<{
     column: string;
     type: string;

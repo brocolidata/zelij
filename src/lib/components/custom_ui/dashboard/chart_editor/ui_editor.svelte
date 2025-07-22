@@ -27,8 +27,7 @@
     let datasetColumns = $derived(getDatasetColumns(dataSource));
     let dimensionConfiguration = $state(configuration?.dimensions || {});
     let metricConfiguration = $state(configuration?.metrics || {main: {column: "", aggregation: ""}, secondary: []});
-    let orderByColumn = $state(configuration?.orderByColumn || "");
-    let orderByType = $state(configuration?.orderByType || "asc");
+    let orderByConfiguration = $state(configuration?.order_by || {column: "", type: ""});
     let seriesList = $state(configuration?.seriesList || []);
     let dimensionOnXAxis = $state(configuration?.dimensionOnXAxis ?? false);
     // svelte-ignore state_referenced_locally
@@ -48,6 +47,7 @@
 		dataset: dataSource,
         dimensions: dimensionConfiguration,
         metrics: metricConfiguration,
+        order_by: orderByConfiguration,
 	});
     let chartQuery = $derived(
 		queryInputsValid ? buildChartQuery(chartQueryParams) : null
@@ -107,8 +107,7 @@
             dataset: dataSource,
             dimensions: dimensionConfiguration,
             metrics: metricConfiguration,
-            orderByColumn,
-            orderByType,
+            order_by: orderByConfiguration,
             seriesList,
             dimensionOnXAxis,
             chartProperties,
@@ -193,8 +192,7 @@
             <ChartOrder 
                 columnOptions={datasetColumns}
                 {chartDataColumns}
-                bind:orderByColumn
-                bind:orderByType
+                bind:orderByConfiguration
             />
         {/if}
         {#if dimensionConfiguration?.main && metricConfiguration.main?.column && metricConfiguration.main?.aggregation}
