@@ -18,8 +18,8 @@
 	} = $props();
 	let mainDimension = $derived(chartQueryParams.dimensions.main);
 	let secondaryDimension = $derived(chartQueryParams.dimensions.secondary);
-	let mainMetric = $derived(chartQueryParams.mainMetric);
-	let secondaryMetrics = $derived(chartQueryParams.secondaryMetrics);
+	let mainMetric = $derived(chartQueryParams.metrics.main);
+	let secondaryMetrics = $derived(chartQueryParams.metrics?.secondary);
 	let columnOptions = $derived(getDataColumnsOptions(chartDataColumns));
 	let collapsibleisOpen = $state(true);
 

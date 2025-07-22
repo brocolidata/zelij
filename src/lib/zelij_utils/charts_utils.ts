@@ -74,9 +74,11 @@ type QueryParams = {
     dataset: string;
     dimensions: {
         main: string, secondary: string
-    } 
-    mainMetric?: Metric;
-    secondaryMetrics?: Metric[];
+    }; 
+    metrics: {
+        main: Metric;
+        secondary?: Metric[];
+    };
 };
 
 function getWhereClauseForUI(
@@ -143,17 +145,18 @@ export function buildChartQuery(
     {
         dataset,
         dimensions,
-        mainMetric,
-        secondaryMetrics = [],
+        metrics,
         orderByColumn,
         orderByType,
     }: QueryParams,
     datasetColumns: { label: string, value: string, type: string }[] = [],
     filters: { column: string; value: any }[] = [],
 ): string {
-    if (!dataset || !mainMetric?.column) return "-- Invalid configuration";
+    if (!dataset || !metrics.main?.column) return "-- Invalid configuration";
     const mainDimension = dimensions?.main;
     const secondaryDimension = dimensions?.secondary;
+    const mainMetric = metrics.main;
+    const secondaryMetrics = metrics?.secondary || [];
 
     const hasMainDim = !!mainDimension;
     const hasSecondaryDim = !!secondaryDimension;
@@ -243,8 +246,7 @@ export function getColumnType(datasetName, columnName) {
 export function buildOptionsFromUI({
     dataset,
     dimensions,
-    mainMetric,
-    secondaryMetrics,
+    metrics,
     seriesList,
     dimensionOnXAxis,
     chartProperties,
@@ -254,6 +256,8 @@ export function buildOptionsFromUI({
     const secondaryDimension = dimensions?.secondary;
     const mainDimensionType = getColumnType(dataset, mainDimension);
     const secondaryDimensionType = getColumnType(dataset, secondaryDimension);
+    const mainMetric = metrics.main;
+    const secondaryMetrics = metrics?.secondary || [];
     if (!mainDimension || !mainMetric || !seriesList) {
         return {};
     }

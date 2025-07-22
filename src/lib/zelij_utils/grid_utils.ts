@@ -50,17 +50,23 @@ export function updateTile(items: any[], updated: any): any[] {
   );
 }
 
+type Metric = {
+  column: string;
+  aggregation: string;
+}
 
 type UIChartConfiguration = {
   dataset: string;
   dimensions: {
     main: string; secondary: string;
   };
-  mainMetric: {
+  metrics: {
+    main: Metric;
+    secondary?: Metric[];
+  };
     column: string;
     aggregation: string;
   };
-  secondaryMetrics?: [];
   orderByColumn: string;
   orderByType: 'asc' | 'desc';
   seriesList: Array<{
@@ -173,8 +179,8 @@ export function getExportableDashboardState(
       }
 
       // Remove secondaryMetrics if empty array
-      if (Array.isArray(mutableUiConfig.secondaryMetrics) && mutableUiConfig.secondaryMetrics.length === 0) {
-        delete mutableUiConfig.secondaryMetrics;
+      if (Array.isArray(mutableUiConfig.metrics?.secondary) && mutableUiConfig.metrics?.secondary.length === 0) {
+        delete mutableUiConfig.metrics.secondary;
       }
 
       updatedChartConfiguration.configuration = mutableUiConfig; // Assign the modified UI config back

@@ -9,14 +9,13 @@
 
     let {
         columnOptions,
-        mainMetric = $bindable(),
-        secondaryMetrics = $bindable(),
-    } = $props();
+        metricConfiguration = $bindable(),
+    } = $props();   
 
     let collapsibleisOpen = $state(true);
 
     function removeMetric(indexToRemove) {
-        secondaryMetrics = secondaryMetrics.filter(
+        metricConfiguration.secondary = metricConfiguration.secondary.filter(
             (_, index) => index !== indexToRemove,
         );
     }
@@ -59,7 +58,7 @@
                     <Combobox
                         boxOptions={columnOptions}
                         objectName="metric column"
-                        bind:value={mainMetric.column}
+                        bind:value={metricConfiguration.main.column}
                     />
                 </div>
 
@@ -70,7 +69,7 @@
                     <Combobox
                         boxOptions={aggregationOptions}
                         objectName="aggregation"
-                        bind:value={mainMetric.aggregation}
+                        bind:value={metricConfiguration.main.aggregation}
                     />
                 </div>
             </div>
@@ -78,7 +77,7 @@
 
         <!-- Secondary Metrics -->
         <div class="space-y-4 gap-x-2">
-            {#each secondaryMetrics as metric, index (index)}
+            {#each metricConfiguration.secondary as metric, index (index)}
                 <div class="flex mt-4 items-end gap-2">
                     <!-- Metric Column Combobox Group -->
                     <!-- This flex-col stacks the Label and the Combobox vertically. -->
@@ -121,13 +120,13 @@
         </div>
 
         <!-- Add another metric -->
-        {#if mainMetric.column !== "" && mainMetric.aggregation !== ""}
+        {#if metricConfiguration.main.column !== "" && metricConfiguration.main.aggregation !== ""}
             <Button
                 variant="link"
                 class="mt-2"
                 onclick={() =>
-                    (secondaryMetrics = [
-                        ...secondaryMetrics,
+                    (metricConfiguration.secondary = [
+                        ...metricConfiguration.secondary,
                         { column: "", aggregation: "" },
                     ])}
             >

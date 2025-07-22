@@ -26,8 +26,7 @@
     let dataSource = $state(configuration?.dataset || "");
     let datasetColumns = $derived(getDatasetColumns(dataSource));
     let dimensionConfiguration = $state(configuration?.dimensions || {});
-    let mainMetric = $state(configuration?.mainMetric || { column: "", aggregation: "" });
-    let secondaryMetrics = $state(configuration?.secondaryMetrics || []);
+    let metricConfiguration = $state(configuration?.metrics || {main: {column: "", aggregation: ""}, secondary: []});
     let orderByColumn = $state(configuration?.orderByColumn || "");
     let orderByType = $state(configuration?.orderByType || "asc");
     let seriesList = $state(configuration?.seriesList || []);
@@ -42,14 +41,13 @@
     let queryInputsValid = $derived(() =>
 		dataSource &&
         dimensionConfiguration?.main &&
-		(mainMetric?.column && mainMetric?.aggregation ||
-		secondaryMetrics.some(m => m.column && m.aggregation))
+        (metricConfiguration.main?.column && metricConfiguration.main?.aggregation ||
+		metricConfiguration?.secondary.some(m => m.column && m.aggregation))
 	);
     let chartQueryParams = $derived({
 		dataset: dataSource,
         dimensions: dimensionConfiguration,
-		mainMetric: mainMetric,
-		secondaryMetrics: secondaryMetrics
+        metrics: metricConfiguration,
 	});
     let chartQuery = $derived(
 		queryInputsValid ? buildChartQuery(chartQueryParams) : null
@@ -67,7 +65,11 @@
 
     // Refresh configIsInvalid
     $effect(() => {
-        configIsInvalid = dimensionConfiguration?.secondary !== "" && secondaryMetrics.length > 0;
+        if (dimensionConfiguration?.secondary !== "" && metricConfiguration?.secondary) {
+            if (metricConfiguration?.secondary.length > 0) {
+                configIsInvalid = true        
+            }
+        }
         disableSave = configIsInvalid;
     });
     $effect(() => {
@@ -104,8 +106,7 @@
         configuration = {
             dataset: dataSource,
             dimensions: dimensionConfiguration,
-            mainMetric,
-            secondaryMetrics,
+            metrics: metricConfiguration,
             orderByColumn,
             orderByType,
             seriesList,
@@ -183,10 +184,9 @@
         </div>
         <ChartMetrics
             columnOptions={datasetColumns}
-            bind:mainMetric
-            bind:secondaryMetrics
+            bind:metricConfiguration
         />
-         {#if dimensionConfiguration?.main && mainMetric?.column && mainMetric?.aggregation}
+        {#if dimensionConfiguration?.main && metricConfiguration.main?.column && metricConfiguration.main?.aggregation}
             <div class="py-2">
                 <Separator />
             </div>
@@ -197,7 +197,7 @@
                 bind:orderByType
             />
         {/if}
-        {#if dimensionConfiguration?.main && mainMetric?.column && mainMetric?.aggregation}
+        {#if dimensionConfiguration?.main && metricConfiguration.main?.column && metricConfiguration.main?.aggregation}
             <div class="py-2">
                 <Separator />
             </div>
