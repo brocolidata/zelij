@@ -30,6 +30,7 @@
     let orderByConfiguration = $state(configuration?.order_by || {column: "", type: ""});
     let seriesConfiguration = $state(configuration?.series || []);
     let dimensionOnYAxis = $state(configuration?.dimension_on_Y_axis ?? false);
+    let seriesAreStacked = $state(configuration?.stacked_series || false);
     // svelte-ignore state_referenced_locally
     let previousDataSource = $state(dataSource);
 
@@ -40,9 +41,8 @@
     let queryInputsValid = $derived(() =>
 		dataSource &&
         dimensionConfiguration?.main &&
-        (metricConfiguration.main?.column && metricConfiguration.main?.aggregation ||
-		metricConfiguration?.secondary.some(m => m.column && m.aggregation))
-	);
+        (metricConfiguration.main?.column !== "" && metricConfiguration.main?.aggregation !== "")
+    );
     let chartQueryParams = $derived({
 		dataset: dataSource,
         dimensions: dimensionConfiguration,
@@ -110,6 +110,7 @@
             order_by: orderByConfiguration,
             series: seriesConfiguration,
             dimension_on_Y_axis: dimensionOnYAxis,
+            stacked_series: seriesAreStacked,
             properties: chartProperties,
         }
         previousDataSource = dataSource
@@ -205,6 +206,7 @@
                 bind:seriesConfiguration
                 {queryInputsValid}
                 bind:dimensionOnYAxis
+                bind:seriesAreStacked
             />
             <Button 
                 variant="secondary" 

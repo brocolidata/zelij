@@ -15,6 +15,7 @@
 		seriesConfiguration = $bindable(),
 		queryInputsValid,
 		dimensionOnYAxis = $bindable(),
+		seriesAreStacked = $bindable(),
 	} = $props();
 	let mainDimension = $derived(chartQueryParams.dimensions.main);
 	let secondaryDimension = $derived(chartQueryParams.dimensions?.secondary);
@@ -79,6 +80,10 @@
 				<Label>X axis</Label>
 				<Switch bind:checked={dimensionOnYAxis}/>
 				<Label>Y axis</Label>
+			</div>
+			<div class="flex space-x-2">
+				<Label>Stacked series</Label>
+				<Switch bind:checked={seriesAreStacked}/>
 			</div>
 			<div class="flex flex-col space-y-3">
 				{#each seriesConfiguration as series, i (i)}
