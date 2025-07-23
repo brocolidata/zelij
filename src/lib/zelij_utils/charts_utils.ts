@@ -238,9 +238,7 @@ export async function runChartQuery(chartQuery) {
     }
 }
 
-export function getColumnType(datasetName, columnName) {
-    console.log('DEBUG getColumnType | datasetName: ', datasetName);
-    console.log('DEBUG getColumnType | columnName: ', columnName);
+export function getColumnType(datasetName: string, columnName: string) {
     const datasetColumns = getDatasetColumns(datasetName);
     if (!datasetColumns) {
         return undefined;

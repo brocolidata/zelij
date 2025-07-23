@@ -61,7 +61,6 @@
         }
         toggleEdit(); // ensure attributes are set based on editMode
     });
-    $inspect('DEBUG dashboardState: ', dashboardState);
 
     function toggleEdit() {
         items = toggleEditInTiles(items, COLS, editMode);
