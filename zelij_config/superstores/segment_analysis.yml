@@ -1,0 +1,146 @@
+dashboards:
+- name: Segment_analysis
+  label: Segment analysis
+  description: Analysis of sales per segment across various dimensions
+  tiles:
+    - "6":
+        min:
+          w: 1
+          h: 1
+        max: {}
+        w: 2
+        h: 3
+        x: 0
+        y: 0
+      id: _hq2b7hzt2
+      chart:
+        type: ui
+        configuration:
+          dataset: superstores_orders
+          dimensions:
+            main: Region
+            secondary: Segment
+          metrics:
+            main:
+              column: Sales
+              aggregation: sum
+          order_by:
+            column: ""
+            type: ""
+          series:
+            - column: Consumer
+              type: bar
+            - column: Corporate
+              type: bar
+            - column: Home Office
+              type: bar
+          stacked_series: true
+          properties:
+            label: Sales per region & segment
+            description: ""
+    - "6":
+        min:
+          w: 1
+          h: 1
+        max: {}
+        w: 2
+        h: 3
+        x: 2
+        y: 0
+      id: _4ytb27d1i
+      chart:
+        type: ui
+        configuration:
+          dataset: superstores_orders
+          dimensions:
+            main: Category
+            secondary: Segment
+          metrics:
+            main:
+              column: Sales
+              aggregation: sum
+          order_by:
+            column: ""
+            type: ""
+          series:
+            - column: Consumer
+              type: bar
+            - column: Corporate
+              type: bar
+            - column: Home Office
+              type: bar
+          stacked_series: true
+          properties:
+            label: Sales per category & segment
+            description: ""
+    - "6":
+        min:
+          w: 1
+          h: 1
+        max: {}
+        w: 4
+        h: 3
+        x: 0
+        y: 3
+      id: _r2zwdmtai
+      chart:
+        type: ui
+        configuration:
+          dataset: superstores_orders
+          dimensions:
+            main: Order Date
+            secondary: Segment
+          metrics:
+            main:
+              column: Order ID
+              aggregation: count
+          order_by:
+            column: Order Date
+            type: asc
+          series:
+            - column: Consumer
+              type: bar
+            - column: Corporate
+              type: bar
+            - column: Home Office
+              type: bar
+          stacked_series: true
+          properties:
+            label: "Evolution of # Orders per segment"
+            description: ""
+    - "6":
+        min:
+          w: 1
+          h: 1
+        max: {}
+        w: 2
+        h: 6
+        x: 4
+        y: 0
+      id: _qvigf76io
+      chart:
+        type: ui
+        configuration:
+          dataset: superstores_orders
+          dimensions:
+            main: City
+            secondary: Segment
+          metrics:
+            main:
+              column: Sales
+              aggregation: sum
+          order_by:
+            column: ""
+            type: ""
+          series:
+            - column: Consumer
+              type: bar
+            - column: Corporate
+              type: bar
+            - column: Home Office
+              type: bar
+          dimension_on_Y_axis: true
+          stacked_series: false
+          properties:
+            label: Sales per city & segment
+            description: ""
