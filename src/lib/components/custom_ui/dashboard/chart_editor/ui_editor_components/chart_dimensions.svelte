@@ -55,8 +55,9 @@
     });
 
     function removeSecondary() {
+        secondaryDimension = "";
         displaySecondaryDimBox = false;
-        dimensionConfiguration.secondary = "";
+        dimensionConfiguration.secondary = secondaryDimension;
     }
 
     /**
