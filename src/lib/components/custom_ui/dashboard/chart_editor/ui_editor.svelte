@@ -12,7 +12,11 @@
     import {
         getDataSourceOptions,
         buildChartQuery,
-        runChartQuery
+        runChartQuery,
+        checkMetricIsDefined,
+        checkGroupedAggregationQueryRequirements,
+        checkPivotTableQueryRequirements,
+        checkSimpleAggregationQueryRequirements
     } from "$lib/zelij_utils/charts_utils";
     import { Separator } from "$lib/components/ui/separator/index.js";
     import { Label } from "$lib/components/ui/label/index.js";
@@ -36,13 +40,25 @@
 
     // Configuration validation state
     let configIsInvalid = $state(false);
+
+    // Query parameters checks
+    let baseRequirementsMet = $derived(checkMetricIsDefined(metricConfiguration));
+    let isPivotTableQueryValid = $derived(checkPivotTableQueryRequirements(baseRequirementsMet, dimensionConfiguration));
+    let isGroupedAggregationQueryValid = $derived(checkGroupedAggregationQueryRequirements(baseRequirementsMet, dimensionConfiguration, metricConfiguration));
+    let isSimpleAggregationQueryValid = $derived(checkSimpleAggregationQueryRequirements(baseRequirementsMet, dimensionConfiguration));
     
     // Inputs assembly states
-    let queryInputsValid = $derived(() =>
-		dataSource &&
-        dimensionConfiguration?.main &&
-        (metricConfiguration.main?.column !== "" && metricConfiguration.main?.aggregation !== "")
+    let queryInputsValid = $derived(
+		(
+            !!dataSource &&
+            (
+                !!isPivotTableQueryValid ||
+                !!isGroupedAggregationQueryValid ||
+                !!isSimpleAggregationQueryValid
+            )
+        ) ? true : false
     );
+    
     let chartQueryParams = $derived({
 		dataset: dataSource,
         dimensions: dimensionConfiguration,
@@ -93,13 +109,20 @@
         }
     }
 
-    // Fetch preview data for column inference
-	$effect(async () => {
-		if (!chartQuery) return;
-		const { columns } = await runChartQuery(chartQuery);
-		chartDataColumns = columns;
-	});
-    
+    $effect(async () => {
+        if (!!queryInputsValid) {
+            try {
+                const { columns } = await runChartQuery(chartQuery);
+                chartDataColumns = columns;
+            } catch (error) {
+                console.error("Error running chart query:", error);
+                chartDataColumns = [];
+            }
+        } else {
+            console.log('DEBUG EFFECT: Chart query is invalid or not ready. Clearing data.');
+            chartDataColumns = [];
+        }
+    });
     function saveConfiguration() {
         isSaving = true;
         

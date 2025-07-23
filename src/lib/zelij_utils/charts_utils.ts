@@ -65,6 +65,53 @@ export function inferSeries({
     return [];
 }
 
+export function checkMetricIsDefined(metricConfiguration) {
+    return (
+        !!metricConfiguration &&
+        metricConfiguration.main?.column !== "" &&
+        metricConfiguration.main?.aggregation !== ""
+    ) ? true : false
+}
+
+export function checkPivotTableQueryRequirements(baseRequirementsMet, dimensionConfiguration) {
+    return (
+        baseRequirementsMet &&
+        !!dimensionConfiguration?.main &&
+        !!dimensionConfiguration?.secondary
+    ) ? true : false
+}
+
+export function checkGroupedAggregationQueryRequirements(baseRequirementsMet, dimensionConfiguration, metricConfiguration) {
+    if (!baseRequirementsMet) return false; 
+
+    const hasMainDim = !!dimensionConfiguration?.main;
+    const hasSecondaryDim = !!dimensionConfiguration?.secondary;
+    const hasMainMetricFullyDefined = baseRequirementsMet;
+
+    // `some` method already returns a boolean, no need for `!!` on its direct result
+    const hasAnyValidSecondaryMetric = metricConfiguration.secondary?.some(m => !!m.column && !!m.aggregation);
+
+    return (
+        hasMainDim &&
+        !hasSecondaryDim &&
+        (hasMainMetricFullyDefined || hasAnyValidSecondaryMetric)
+    ) ? true : false;
+}
+
+export function checkSimpleAggregationQueryRequirements(baseRequirementsMet, dimensionConfiguration) {
+    if (!baseRequirementsMet) return false;
+
+    const hasMainDim = !!dimensionConfiguration?.main;
+    const hasSecondaryDim = !!dimensionConfiguration?.secondary;
+    const hasMainMetricFullyDefined = baseRequirementsMet;
+
+    return (
+        !hasMainDim &&
+        !hasSecondaryDim &&
+        hasMainMetricFullyDefined
+    ) ? true : false;
+}
+
 type Metric = {
     column: string;
     aggregation: "SUM" | "AVG" | "COUNT" | "MIN" | "MAX";
