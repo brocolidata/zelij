@@ -30,7 +30,7 @@
 
     let disableSave = $state(false);
     let dashboardExport = $derived(
-        getExportableDashboardState(dashboardState, COLS),
+        getExportableDashboardState($state.snapshot(dashboardState), COLS),
     );
     let saveSuccess = $state(false);
     let openExportConfigDrawer = $state(false);

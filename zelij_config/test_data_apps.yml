@@ -3,5 +3,6 @@ data_apps:
   label: Superstores data app
   description: A data app for test purposes
   dashboards:
-  - Stores_Sales_Analysis
+  - Overview_of_Orders
+  - Segment_analysis
     

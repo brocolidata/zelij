@@ -17,7 +17,6 @@ const configFolderPath = process.env[CONFIG_FOLDER_ENV_VAR]
 const outputFilePath = path.join(process.cwd(), 'static/config/zelij_configuration.json');
 
 // Define the source and destination paths for data files
-// const dataFolderPath = path.join(process.cwd(), 'zelij_data');
 const dataFolderPath = process.env[DATA_FOLDER_ENV_VAR]
   ? path.resolve(process.cwd(), process.env[DATA_FOLDER_ENV_VAR])
   : path.join(process.cwd(), 'zelij_data');
@@ -26,21 +25,25 @@ const staticDataFolderPath = path.join(process.cwd(), 'static/data');
 // Define the high-level keys that should be merged as arrays
 const mergeableKeys = ['dashboards', 'data_sources', 'data_apps']; 
 
-// Function to read and parse YAML files
+// Function to read and parse YAML files recursively
 async function readYAMLFiles(folderPath) {
-  const files = await fs.readdir(folderPath);
-  const yamlFiles = files.filter(file => file.endsWith('.yaml') || file.endsWith('.yml'));
+  let allParsedConfigs = [];
+  const entries = await fs.readdir(folderPath, { withFileTypes: true });
 
-  const parsedConfigs = [];
-
-  for (const file of yamlFiles) {
-    const filePath = path.join(folderPath, file);
-    const fileContent = await fs.readFile(filePath, 'utf8');
-    const parsedContent = yaml.parse(fileContent);
-    parsedConfigs.push(parsedContent);
+  for (const entry of entries) {
+    const fullPath = path.join(folderPath, entry.name);
+    if (entry.isDirectory()) {
+      // If it's a directory, recursively call readYAMLFiles
+      allParsedConfigs = allParsedConfigs.concat(await readYAMLFiles(fullPath));
+    } else if (entry.isFile() && (entry.name.endsWith('.yaml') || entry.name.endsWith('.yml'))) {
+      // If it's a YAML file, read and parse it
+      const fileContent = await fs.readFile(fullPath, 'utf8');
+      const parsedContent = yaml.parse(fileContent);
+      allParsedConfigs.push(parsedContent);
+    }
   }
 
-  return parsedConfigs;
+  return allParsedConfigs;
 }
 
 // Function to merge the YAML objects, with special handling for specific keys
@@ -112,9 +115,9 @@ async function processZelij() {
     console.log('Starting data file copy...');
     await copyDataFiles();
 
-    console.log('Zelij processing complete.');
+    console.log('Zelij processing complete. 🎉');
   } catch (error) {
-    console.error('Error during Zelij processing:', error);
+    console.error('Error during Zelij processing: 💔', error);
   }
 }
 

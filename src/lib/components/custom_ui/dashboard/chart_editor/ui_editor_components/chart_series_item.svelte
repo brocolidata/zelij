@@ -14,9 +14,6 @@
         { label: "Area", value: "area" },
     ];
 
-    // $inspect('Chart series item chartDataColumns', chartDataColumns);
-    // $inspect('Chart series item columnOptions', columnOptions);
-
     function removeItem() {
         onRemove();
     }

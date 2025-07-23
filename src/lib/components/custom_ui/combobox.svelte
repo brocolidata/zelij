@@ -17,20 +17,10 @@
     let selectedValue = $derived(
         boxOptions.find((o) => o.value === value)?.label,
     );
-
-    // We want to refocus the trigger button when the user selects
-    // an item from the list so users can continue navigating the
-    // rest of the form with the keyboard.
-    function closeAndFocusTrigger() {
-        open = false;
-        tick().then(() => {
-            triggerRef.focus();
-        });
-    }
 </script>
 <!-- class="w-[200px] justify-between" -->
 <Popover.Root bind:open>
-    <Popover.Trigger bind:ref={triggerRef}>
+    <Popover.Trigger>
         {#snippet child({ props })}
             <Button
                 variant="outline"
@@ -44,19 +34,6 @@
                 <ChevronsUpDown class="ml-2 size-4 shrink-0 opacity-50" />
             </Button>
             
-            <!-- <button
-                class={buttonVariants({ variant: "outline", size: "default" })}
-                aria-expanded={open}
-                data-slot="button"
-                role="combobox"
-                {...props}
-                type="button"
-            >
-                 <span class="truncate">
-                    {selectedValue || `Select ${objectName}`}
-                </span>
-                <ChevronsUpDown class="ml-2 size-4 shrink-0 opacity-50" />
-            </button> -->
         {/snippet}
     </Popover.Trigger>
     <Popover.Content class="w-full p-0">
@@ -70,7 +47,7 @@
                             value={option.value}
                             onSelect={() => {
                                 value = option.value;
-                                closeAndFocusTrigger();
+                                open = false;
                             }}
                         > 
                             {#if option.icon}

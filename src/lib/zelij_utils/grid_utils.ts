@@ -44,34 +44,38 @@ export function updateTile(items: any[], updated: any): any[] {
     item.id === updated.id
       ? {
           ...item,
-          chartConfiguration: updated.chartConfiguration, // <-- NEW
+          chart: updated.chartConfiguration, // <-- NEW
         }
       : item
   );
 }
 
+type Metric = {
+  column: string;
+  aggregation: string;
+}
 
 type UIChartConfiguration = {
   dataset: string;
-  mainDimension: string;
-  mainDimensionType: string;
-  secondaryDimension?: string;
-  secondaryDimensionType?: string;
-  mainMetric: {
-    column: string;
-    aggregation: string;
+  dimensions: {
+    main: string; secondary: string;
   };
-  secondaryMetrics?: [];
-  orderByColumn: string;
-  orderByType: 'asc' | 'desc';
-  seriesList: Array<{
+  metrics: {
+    main: Metric;
+    secondary?: Metric[];
+  };
+  order_by: {
+    column: string;
+    type: "asc" | "desc";
+  };
+  series: Array<{
     column: string;
     type: string;
   }>;
-  dimensionOnXAxis: boolean;
-  chartProperties: {
-    chartLabel: string;
-    chartDescription: string;
+  dimension_on_Y_axis: boolean;
+  properties: {
+    label: string;
+    description: string;
   };
 }
 
@@ -95,7 +99,7 @@ type Layout = {
 export type GridItem = {
   id: string;
   [key: number]: Layout;
-  chartConfiguration: {
+  chart: {
     configuration: UIChartConfiguration | AdvancedChartConfiguration;
     type: 'ui' | 'advanced';
   };
@@ -159,7 +163,7 @@ export function getExportableDashboardState(
     );
 
     // Process chartConfiguration if it exists
-    let updatedChartConfiguration = { ...item.chartConfiguration };
+    let updatedChartConfiguration = { ...item.chart };
 
     // Type guard: Check if the configuration is a UIChartConfiguration
     if (updatedChartConfiguration.type === 'ui' && updatedChartConfiguration.configuration) {
@@ -169,14 +173,18 @@ export function getExportableDashboardState(
       const mutableUiConfig: UIChartConfiguration = { ...uiConfig };
 
       // Remove secondaryDimension if empty string
-      if (mutableUiConfig.secondaryDimension === "") {
-        delete mutableUiConfig.secondaryDimension;
-        delete mutableUiConfig?.secondaryDimensionType;
+      if (mutableUiConfig.dimensions?.secondary === "") {
+        delete mutableUiConfig.dimensions.secondary;
       }
 
       // Remove secondaryMetrics if empty array
-      if (Array.isArray(mutableUiConfig.secondaryMetrics) && mutableUiConfig.secondaryMetrics.length === 0) {
-        delete mutableUiConfig.secondaryMetrics;
+      if (Array.isArray(mutableUiConfig.metrics?.secondary) && mutableUiConfig.metrics?.secondary.length === 0) {
+        delete mutableUiConfig.metrics.secondary;
+      }
+
+      // Remove dimension_on_Y_axis if false
+      if (mutableUiConfig.dimension_on_Y_axis === false) {
+        delete mutableUiConfig.dimension_on_Y_axis;
       }
 
       updatedChartConfiguration.configuration = mutableUiConfig; // Assign the modified UI config back
@@ -185,7 +193,7 @@ export function getExportableDashboardState(
     return {
       ...item,
       [cols]: layout,
-      chartConfiguration: updatedChartConfiguration, // Use the updated configuration
+      chart: updatedChartConfiguration, // Use the updated configuration
     };
   });
 

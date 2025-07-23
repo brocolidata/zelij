@@ -10,16 +10,20 @@
         Hash,
         CaseSensitive,
         CalendarDays,
-        Move3d
+        Move3d,
     } from "@lucide/svelte";
 
     let {
         columnOptions,
-        mainDimension = $bindable(),
-        mainDimensionType = $bindable(),
-        secondaryDimension = $bindable(),
-        secondaryDimensionType = $bindable(),
+        dimensionConfiguration = $bindable(),
     } = $props();
+
+    let mainDimension = $state(dimensionConfiguration?.main || "");
+    let mainDimensionType = $state(dimensionConfiguration?.main_type || "");
+    let secondaryDimension = $state(dimensionConfiguration?.secondary || "");
+    let secondaryDimensionType = $state(
+        dimensionConfiguration?.secondary_type || "",
+    );
 
     const dataTypeIcons = {
         BIGINT: Hash,
@@ -28,27 +32,32 @@
         TIMESTAMP_NS: CalendarDays,
     };
 
-    let displaySecondaryDimBox = $state(secondaryDimension === "" ? false : true);
+    let displaySecondaryDimBox = $state(
+        dimensionConfiguration?.secondary ? true : false,
+    );
     let collapsibleisOpen = $state(true);
     let columnOptionsWithIcons = $derived(
         addIconsToColumnOptions(columnOptions, dataTypeIcons),
     );
     $effect(() => {
         const columnObj = columnOptions.find(
-            ({ value }) => value === mainDimension
+            ({ value }) => value === mainDimension,
         );
         mainDimensionType = columnObj?.type;
-    })
+        dimensionConfiguration.main = mainDimension;
+    });
     $effect(() => {
         const columnObj = columnOptions.find(
-            ({ value }) => value === secondaryDimension
+            ({ value }) => value === secondaryDimension,
         );
         secondaryDimensionType = columnObj?.type;
-    })
+        dimensionConfiguration.secondary = secondaryDimension;
+    });
 
     function removeSecondary() {
-        displaySecondaryDimBox = false;
         secondaryDimension = "";
+        displaySecondaryDimBox = false;
+        dimensionConfiguration.secondary = secondaryDimension;
     }
 
     /**
@@ -77,10 +86,8 @@
 <Collapsible.Root bind:open={collapsibleisOpen}>
     <div class="flex items-center justify-between space-x-4">
         <div class="mt-4 mb-2 flex items-center gap-2">
-            <Move3d size={16}/>
-            <h2
-                class="text-lg font-semibold text-gray-900 dark:text-gray-100"
-            >
+            <Move3d size={16} />
+            <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
                 Dimensions
             </h2>
         </div>
@@ -111,8 +118,31 @@
         </div>
 
         <!-- Optional Secondary Dimension -->
-        {#if !displaySecondaryDimBox}
-            {#if mainDimension !== ""}
+        {#if mainDimension !== ""}
+            {#if displaySecondaryDimBox}
+                <div class="mt-4 flex items-end gap-2">
+                    <!-- Secondary dimension Combobox -->
+                    <div class="flex-1 space-y-3">
+                        <Label>Secondary Dimension</Label>
+                        <Combobox
+                            boxOptions={columnOptions}
+                            objectName="dimension"
+                            bind:value={secondaryDimension}
+                        />
+                    </div>
+
+                    <!-- Remove button -->
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        class="text-red-500 justify-center"
+                        onclick={removeSecondary}
+                        aria-label="Remove secondary dimension"
+                    >
+                        ✕
+                    </Button>
+                </div>
+            {:else}
                 <Button
                     variant="link"
                     class="mt-2"
@@ -121,29 +151,6 @@
                     + Add a dimension
                 </Button>
             {/if}
-        {:else}
-            <div class="mt-4 flex items-center space-x-2">
-                <!-- Secondary dimension Combobox -->
-                <div class="flex-1 space-y-3">
-                    <Label>Secondary Dimension</Label>
-                    <Combobox
-                        boxOptions={columnOptions}
-                        objectName="dimension"
-                        bind:value={secondaryDimension}
-                    />
-                </div>
-
-                <!-- Remove button -->
-                <Button
-                    variant="ghost"
-                    size="icon"
-                    class="text-red-500"
-                    onclick={removeSecondary}
-                    aria-label="Remove secondary dimension"
-                >
-                    ✕
-                </Button>
-            </div>
         {/if}
     </Collapsible.Content>
 </Collapsible.Root>

@@ -7,14 +7,13 @@
     import TileEditBar from "$custom_ui/dashboard/tile_edit_bar.svelte";
     import { mode, userPrefersMode } from "mode-watcher";
     import { 
-        fetchColumnOptions,
         buildChartQuery, 
         buildOptionsFromUI, 
         extractDatasetFromChartConfiguration,
         addWhereStatement
     } from "$lib/zelij_utils/charts_utils";
     import { getContext } from 'svelte';
-    import { getDataSourceByName, dataLoaded } from '$lib/zelij_utils/stores';
+    import { getDatasetColumns, dataLoaded } from '$lib/zelij_utils/stores';
 
 
     let { remove, dataItem = $bindable(), editMode, onUpdate } = $props();
@@ -22,20 +21,15 @@
     let chart = $state();
     let chartContainer = $state();
     let datasetRows = writable([]);
-    let chartConfiguration = $state(dataItem?.chartConfiguration || {});
+    let chartConfiguration = $state(dataItem?.chart || {});
     let datasetName = $state();
     let initializedChart = $state(false);
     let filtersStore = getContext('filters');
     let chartFilters = $state([]);
     let datasetColumns = $derived(getDatasetColumns(datasetName));
-
-    function getDatasetColumns(name) {
-        const dataSource = getDataSourceByName(name);
-        return dataSource.columns;
-    }
     
     onMount(async () => {
-        datasetName = extractDatasetFromChartConfiguration(dataItem?.chartConfiguration);
+        datasetName = extractDatasetFromChartConfiguration(dataItem?.chart);
         initChart();
         if (datasetName !== null && $dataLoaded) {
             await refreshTile();
@@ -134,12 +128,12 @@
     function refreshQueryWithFilters(activeFilters) {
         let sqlQueryWFilters;
         let chartOptions;
-        if (dataItem?.chartConfiguration.type === "ui") {
+        if (dataItem?.chart.type === "ui") {
             sqlQueryWFilters = buildChartQuery(chartConfiguration.configuration, datasetColumns, activeFilters);
             chartOptions = buildOptionsFromUI(
-                {...dataItem?.chartConfiguration.configuration, theme:$mode})
+                {...dataItem?.chart.configuration, theme:$mode})
         } else {
-            const { sqlQuery, chartOptions: configChartOptions } = dataItem?.chartConfiguration.configuration;
+            const { sqlQuery, chartOptions: configChartOptions } = dataItem?.chart.configuration;
             sqlQueryWFilters = addWhereStatement(sqlQuery, datasetColumns, activeFilters);
             chartOptions = configChartOptions;
 
@@ -228,7 +222,7 @@
             ...chartOptions,
             dataset: { source: $datasetRows }
         };
-        chart.setOption(fullChartOptions);
+        chart.setOption(fullChartOptions, {notMerge: true});
     }
 
     async function refreshTile() {
@@ -240,7 +234,7 @@
                 ...chartOptions, 
                 dataset: { source: $datasetRows } 
             };
-            chart.setOption(fullChartOptions);
+            chart.setOption(fullChartOptions, {notMerge: true});
         } else {
             const sqlQuery = buildChartQuery(chartConfiguration.configuration, datasetColumns);
             const rows = await getDatasetFromQuery(sqlQuery);
@@ -251,7 +245,7 @@
                 ...UIChartOptions,
                 dataset: { source: $datasetRows }
             };
-            chart.setOption(fullChartOptions);
+            chart.setOption(fullChartOptions, {notMerge: true});
         }
         chart.hideLoading();
     }

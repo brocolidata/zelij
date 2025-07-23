@@ -1,4 +1,5 @@
 import { getDataByQuery } from "./duckdb";
+import { getDatasetColumns } from "./stores";
 
 export const aggregationOptions = [
     { label: "Sum", value: "sum" },
@@ -8,20 +9,6 @@ export const aggregationOptions = [
     { label: "Max", value: "max" }
 ];
 
-export async function fetchColumnOptions(tableName) {
-    try {
-        const arrowTable = await getDataByQuery(`DESCRIBE ${tableName}`);
-        const results = arrowTable.toArray();
-        return results.map((col) => ({
-            label: col.column_name,
-            value: col.column_name,
-            type: col.column_type
-        }));
-    } catch (err) {
-        console.error("Failed to fetch column names:", err);
-        return [];
-    }
-}
 
 export function getDataSourceOptions(data_sources) {
     return data_sources.map((source) => ({
@@ -78,6 +65,53 @@ export function inferSeries({
     return [];
 }
 
+export function checkMetricIsDefined(metricConfiguration) {
+    return (
+        !!metricConfiguration &&
+        metricConfiguration.main?.column !== "" &&
+        metricConfiguration.main?.aggregation !== ""
+    ) ? true : false
+}
+
+export function checkPivotTableQueryRequirements(baseRequirementsMet, dimensionConfiguration) {
+    return (
+        baseRequirementsMet &&
+        !!dimensionConfiguration?.main &&
+        !!dimensionConfiguration?.secondary
+    ) ? true : false
+}
+
+export function checkGroupedAggregationQueryRequirements(baseRequirementsMet, dimensionConfiguration, metricConfiguration) {
+    if (!baseRequirementsMet) return false; 
+
+    const hasMainDim = !!dimensionConfiguration?.main;
+    const hasSecondaryDim = !!dimensionConfiguration?.secondary;
+    const hasMainMetricFullyDefined = baseRequirementsMet;
+
+    // `some` method already returns a boolean, no need for `!!` on its direct result
+    const hasAnyValidSecondaryMetric = metricConfiguration.secondary?.some(m => !!m.column && !!m.aggregation);
+
+    return (
+        hasMainDim &&
+        !hasSecondaryDim &&
+        (hasMainMetricFullyDefined || hasAnyValidSecondaryMetric)
+    ) ? true : false;
+}
+
+export function checkSimpleAggregationQueryRequirements(baseRequirementsMet, dimensionConfiguration) {
+    if (!baseRequirementsMet) return false;
+
+    const hasMainDim = !!dimensionConfiguration?.main;
+    const hasSecondaryDim = !!dimensionConfiguration?.secondary;
+    const hasMainMetricFullyDefined = baseRequirementsMet;
+
+    return (
+        !hasMainDim &&
+        !hasSecondaryDim &&
+        hasMainMetricFullyDefined
+    ) ? true : false;
+}
+
 type Metric = {
     column: string;
     aggregation: "SUM" | "AVG" | "COUNT" | "MIN" | "MAX";
@@ -85,10 +119,18 @@ type Metric = {
 
 type QueryParams = {
     dataset: string;
-    mainDimension?: string;
-    secondaryDimension?: string;
-    mainMetric?: Metric;
-    secondaryMetrics?: Metric[];
+    dimensions: {
+        main: string, secondary: string
+    }; 
+    metrics: {
+        main: Metric;
+        secondary?: Metric[];
+    };
+    order_by: {
+        column: string;
+        type: "asc" | "desc";
+    }
+    
 };
 
 function getWhereClauseForUI(
@@ -154,17 +196,20 @@ function getWhereClauseForUI(
 export function buildChartQuery(
     {
         dataset,
-        mainDimension,
-        secondaryDimension,
-        mainMetric,
-        secondaryMetrics = [],
-        orderByColumn,
-        orderByType,
+        dimensions,
+        metrics,
+        order_by,
     }: QueryParams,
     datasetColumns: { label: string, value: string, type: string }[] = [],
     filters: { column: string; value: any }[] = [],
 ): string {
-    if (!dataset || !mainMetric?.column) return "-- Invalid configuration";
+    if (!dataset || !metrics.main?.column) return "-- Invalid configuration";
+    const mainDimension = dimensions?.main;
+    const secondaryDimension = dimensions?.secondary;
+    const mainMetric = metrics.main;
+    const secondaryMetrics = metrics?.secondary || [];
+    const orderByColumn = order_by.column;
+    const orderByType = order_by.type;
 
     const hasMainDim = !!mainDimension;
     const hasSecondaryDim = !!secondaryDimension;
@@ -240,24 +285,37 @@ export async function runChartQuery(chartQuery) {
     }
 }
 
+export function getColumnType(datasetName: string, columnName: string) {
+    const datasetColumns = getDatasetColumns(datasetName);
+    if (!datasetColumns) {
+        return undefined;
+    }
+    const column = datasetColumns.find(col => col.value === columnName);
+    return column ? column.type : undefined;
+}
+
 export function buildOptionsFromUI({
-    mainDimension,
-    secondaryDimension,
-    mainDimensionType,
-    secondaryDimensionType,
-    mainMetric,
-    secondaryMetrics,
-    seriesList,
-    dimensionOnXAxis,
-    chartProperties,
+    dataset,
+    dimensions,
+    metrics,
+    series,
+    dimension_on_Y_axis,
+    stacked_series,
+    properties,
     theme = 'light' // default to light mode
 }) {
-    if (!mainDimension || !mainMetric || !seriesList) {
+    const mainDimension = dimensions?.main;
+    const secondaryDimension = dimensions?.secondary;
+    const mainDimensionType = getColumnType(dataset, mainDimension);
+    const secondaryDimensionType = getColumnType(dataset, secondaryDimension);
+    const mainMetric = metrics.main;
+    const secondaryMetrics = metrics?.secondary || [];
+    if (!mainDimension || !mainMetric || !series) {
         return {};
     }
 
-    const xAxisField = dimensionOnXAxis ? mainDimension : mainMetric.column;
-    const yAxisField = dimensionOnXAxis ? mainMetric.column : mainDimension;
+    const xAxisField = dimension_on_Y_axis ? mainDimension : mainMetric.column;
+    const yAxisField = dimension_on_Y_axis ? mainMetric.column : mainDimension;
 
     // Define theme-aware selection style
     const selectItemStyle = {
@@ -284,8 +342,8 @@ export function buildOptionsFromUI({
             left: 2
         },
         title: {
-            text: chartProperties?.chartLabel || '',
-            subtext: chartProperties?.chartDescription || '',
+            text: properties?.label || '',
+            subtext: properties?.description || '',
             left: 'center'
         },
         tooltip: {
@@ -295,23 +353,24 @@ export function buildOptionsFromUI({
             top: 'bottom'
         },
         xAxis: {
-            type: dimensionOnXAxis ? 'value' : dimensionAxisType,
+            type: dimension_on_Y_axis ? 'value' : dimensionAxisType,
             name: xAxisField
         },
         yAxis: {
-            type: dimensionOnXAxis ? dimensionAxisType : 'value',
+            type: dimension_on_Y_axis ? dimensionAxisType : 'value',
             name: yAxisField,
             axisLabel: {
                 width: 200
             }
         },
-        series: seriesList.map((series) => ({
+        series: series.map((series) => ({
             type: series.type || 'bar',
             name: series.column,
             encode: {
-                x: dimensionOnXAxis ? series.column : mainDimension,
-                y: dimensionOnXAxis ? mainDimension : series.column,
+                x: dimension_on_Y_axis ? series.column : mainDimension,
+                y: dimension_on_Y_axis ? mainDimension : series.column,
             },
+            ...(stacked_series === true ? { stack: 'total' } : {}),
             select: {
                 itemStyle: selectItemStyle
             },

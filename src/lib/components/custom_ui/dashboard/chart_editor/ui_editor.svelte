@@ -10,51 +10,60 @@
     import * as Alert from "$lib/components/ui/alert/index.js";
     import { CircleAlert, Check, Save } from "@lucide/svelte";
     import {
-        fetchColumnOptions,
         getDataSourceOptions,
         buildChartQuery,
-        runChartQuery
+        runChartQuery,
+        checkMetricIsDefined,
+        checkGroupedAggregationQueryRequirements,
+        checkPivotTableQueryRequirements,
+        checkSimpleAggregationQueryRequirements
     } from "$lib/zelij_utils/charts_utils";
     import { Separator } from "$lib/components/ui/separator/index.js";
     import { Label } from "$lib/components/ui/label/index.js";
-    import { getDataSourceByName, dataLoaded } from '$lib/zelij_utils/stores';
+    import { dataLoaded, getDatasetColumns } from '$lib/zelij_utils/stores';
     
     let { configuration = $bindable(), onSave } = $props(); 
 
     const data_sources = getDataSources();
     const dataSourceOptions = getDataSourceOptions(data_sources);
-    let chartProperties = $state(configuration?.chartProperties || {});
+    let chartProperties = $state(configuration?.properties || {});
     let dataSource = $state(configuration?.dataset || "");
     let datasetColumns = $derived(getDatasetColumns(dataSource));
-    let mainDimension = $state(configuration?.mainDimension || "");
-    let secondaryDimension = $state(configuration?.secondaryDimension || "");
-    let mainDimensionType = $state(configuration?.mainDimensionType)
-    let secondaryDimensionType = $state(configuration?.secondaryDimensionType)
-    let mainMetric = $state(configuration?.mainMetric || { column: "", aggregation: "" });
-    let secondaryMetrics = $state(configuration?.secondaryMetrics || []);
-    let orderByColumn = $state(configuration?.orderByColumn || "");
-    let orderByType = $state(configuration?.orderByColumn || "desc");
-    let seriesList = $state(configuration?.seriesList || []);
-    let dimensionOnXAxis = $state(configuration?.dimensionOnXAxis ?? true);
+    let dimensionConfiguration = $state(configuration?.dimensions || {});
+    let metricConfiguration = $state(configuration?.metrics || {main: {column: "", aggregation: ""}, secondary: []});
+    let orderByConfiguration = $state(configuration?.order_by || {column: "", type: ""});
+    let seriesConfiguration = $state(configuration?.series || []);
+    let dimensionOnYAxis = $state(configuration?.dimension_on_Y_axis ?? false);
+    let seriesAreStacked = $state(configuration?.stacked_series || false);
     // svelte-ignore state_referenced_locally
     let previousDataSource = $state(dataSource);
 
     // Configuration validation state
     let configIsInvalid = $state(false);
+
+    // Query parameters checks
+    let baseRequirementsMet = $derived(checkMetricIsDefined(metricConfiguration));
+    let isPivotTableQueryValid = $derived(checkPivotTableQueryRequirements(baseRequirementsMet, dimensionConfiguration));
+    let isGroupedAggregationQueryValid = $derived(checkGroupedAggregationQueryRequirements(baseRequirementsMet, dimensionConfiguration, metricConfiguration));
+    let isSimpleAggregationQueryValid = $derived(checkSimpleAggregationQueryRequirements(baseRequirementsMet, dimensionConfiguration));
     
     // Inputs assembly states
-    let queryInputsValid = $derived(() =>
-		dataSource &&
-		mainDimension &&
-		(mainMetric?.column && mainMetric?.aggregation ||
-		secondaryMetrics.some(m => m.column && m.aggregation))
-	);
+    let queryInputsValid = $derived(
+		(
+            !!dataSource &&
+            (
+                !!isPivotTableQueryValid ||
+                !!isGroupedAggregationQueryValid ||
+                !!isSimpleAggregationQueryValid
+            )
+        ) ? true : false
+    );
+    
     let chartQueryParams = $derived({
 		dataset: dataSource,
-		mainDimension: mainDimension,
-		secondaryDimension: secondaryDimension,
-		mainMetric: mainMetric,
-		secondaryMetrics: secondaryMetrics
+        dimensions: dimensionConfiguration,
+        metrics: metricConfiguration,
+        order_by: orderByConfiguration,
 	});
     let chartQuery = $derived(
 		queryInputsValid ? buildChartQuery(chartQueryParams) : null
@@ -67,12 +76,16 @@
     let disableSave = $state(false);
     let saveSuccess = $state(false);
     let isSaving = $state(false);
-    let chartLabel = $derived(chartProperties?.chartLabel)
+    let chartLabel = $derived(chartProperties?.label)
     let isChartLabelEmpty = $state(true);
 
     // Refresh configIsInvalid
     $effect(() => {
-        configIsInvalid = secondaryDimension !== "" && secondaryMetrics.length > 0;
+        if (dimensionConfiguration?.secondary !== "" && metricConfiguration?.secondary) {
+            if (metricConfiguration?.secondary.length > 0) {
+                configIsInvalid = true        
+            }
+        }
         disableSave = configIsInvalid;
     });
     $effect(() => {
@@ -86,45 +99,42 @@
         }
     })
 
-    function getDatasetColumns(name) {
-        const dataSourceObj = getDataSourceByName(name);
-        return dataSourceObj.columns;
-    }
-
     // Function to refetch column options when dataSource changes
     async function updateColumns() {
         if (dataSource) {
             // Reset dimensions when changing dataset
-            mainDimension = "";
-            mainDimensionType = "";
-            secondaryDimension = "";
-            secondaryDimensionType = "";
+            dimensionConfiguration = {
+                main: "", secondary: "", 
+            };
         }
     }
 
-    // Fetch preview data for column inference
-	$effect(async () => {
-		if (!chartQuery) return;
-		const { columns } = await runChartQuery(chartQuery);
-		chartDataColumns = columns;
-	});
-    
+    $effect(async () => {
+        if (!!queryInputsValid) {
+            try {
+                const { columns } = await runChartQuery(chartQuery);
+                chartDataColumns = columns;
+            } catch (error) {
+                console.error("Error running chart query:", error);
+                chartDataColumns = [];
+            }
+        } else {
+            console.log('DEBUG EFFECT: Chart query is invalid or not ready. Clearing data.');
+            chartDataColumns = [];
+        }
+    });
     function saveConfiguration() {
         isSaving = true;
         
         configuration = {
             dataset: dataSource,
-            mainDimension,
-            secondaryDimension,
-            mainDimensionType,
-            secondaryDimensionType,
-            mainMetric,
-            secondaryMetrics,
-            orderByColumn,
-            orderByType,
-            seriesList,
-            dimensionOnXAxis,
-            chartProperties,
+            dimensions: dimensionConfiguration,
+            metrics: metricConfiguration,
+            order_by: orderByConfiguration,
+            series: seriesConfiguration,
+            dimension_on_Y_axis: dimensionOnYAxis,
+            stacked_series: seriesAreStacked,
+            properties: chartProperties,
         }
         previousDataSource = dataSource
         onSave();
@@ -138,11 +148,7 @@
         }, 2000);
 
         isSaving = false;
-    }
-
-    $inspect(mainDimensionType);
-    $inspect(secondaryDimensionType);
-        
+    }   
    
 </script>
 
@@ -194,40 +200,36 @@
     {#if dataSource}
         <ChartDimensions
             columnOptions={datasetColumns}
-            bind:mainDimension
-            bind:secondaryDimension
-            bind:mainDimensionType
-            bind:secondaryDimensionType
+            bind:dimensionConfiguration
         />
         <div class="py-2">
             <Separator />
         </div>
         <ChartMetrics
             columnOptions={datasetColumns}
-            bind:mainMetric
-            bind:secondaryMetrics
+            bind:metricConfiguration
         />
-        {#if mainDimension && mainMetric?.column && mainMetric?.aggregation}
+        {#if dimensionConfiguration?.main && metricConfiguration.main?.column && metricConfiguration.main?.aggregation}
             <div class="py-2">
                 <Separator />
             </div>
             <ChartOrder 
                 columnOptions={datasetColumns}
                 {chartDataColumns}
-                bind:orderByColumn
-                bind:orderByType
+                bind:orderByConfiguration
             />
         {/if}
-        {#if mainDimension && mainMetric?.column && mainMetric?.aggregation}
+        {#if dimensionConfiguration?.main && metricConfiguration.main?.column && metricConfiguration.main?.aggregation}
             <div class="py-2">
                 <Separator />
             </div>
             <ChartSeries
                 {chartQueryParams}
                 {chartDataColumns} 
-                bind:seriesList
+                bind:seriesConfiguration
                 {queryInputsValid}
-                bind:dimensionOnXAxis
+                bind:dimensionOnYAxis
+                bind:seriesAreStacked
             />
             <Button 
                 variant="secondary" 

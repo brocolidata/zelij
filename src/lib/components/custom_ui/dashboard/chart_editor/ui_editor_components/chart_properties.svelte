@@ -9,11 +9,11 @@
         chartProperties = $bindable(),
     } = $props();
 
-    let chartLabel = $state(chartProperties?.chartLabel || "");
-    let chartDescription = $state(chartProperties?.chartDescription || "");
+    let chartLabel = $state(chartProperties?.label || "");
+    let chartDescription = $state(chartProperties?.description || "");
 
     $effect(() => {
-        chartProperties = {chartLabel, chartDescription}
+        chartProperties = {label: chartLabel, description: chartDescription}
     })
     
     
@@ -39,10 +39,6 @@
                 </p>
             </div>
             <div class="grid gap-2">
-                <!-- <div class="grid grid-cols-3 items-center gap-4">
-                    <Label for="chart_label" class="text-right text-sm font-medium text-gray-700 dark:text-gray-100">Label</Label>
-                    <Input id="chart_label" bind:value={chartLabel} class="col-span-2 h-8 rounded-md border shadow-sm focus-within:ring-1 focus-within:ring-primary-500 focus-within:border-primary-500 text-sm text-gray-900 dark:text-gray-100" />
-                </div> -->
                 <div class="grid grid-cols-3 items-center gap-4">
                     <Label for="chart_description" class="text-right text-sm font-medium text-gray-700 dark:text-gray-100">Description</Label>
                     <Input id="chart_description" bind:value={chartDescription} class="col-span-2 h-8 rounded-md border shadow-sm focus-within:ring-1 focus-within:ring-primary-500 focus-within:border-primary-500 text-sm text-gray-900 dark:text-gray-100" />

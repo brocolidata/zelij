@@ -38,7 +38,7 @@
         <Sheet.Header>
             <Sheet.Title>Configuration YAML</Sheet.Title>
             <Sheet.Description>
-                You can copy/paste this to a Open Data Viz YAML file
+                You can copy/paste this to a Zelij YAML file
             </Sheet.Description>
         </Sheet.Header>
         <div class="flex-grow overflow-auto px-2 py-6 min-h-0">

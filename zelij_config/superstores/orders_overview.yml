@@ -1,0 +1,126 @@
+dashboards:
+- name: Overview_of_Orders
+  label: "Overview of Orders"
+  description: ""
+  tiles:
+    - "6":
+        min:
+          w: 1
+          h: 1
+        max: {}
+        w: 4
+        h: 3
+        x: 0
+        y: 0
+      id: _aabckr61c
+      chart:
+        type: ui
+        configuration:
+          dataset: superstores_orders
+          dimensions:
+            main: Order Date
+          metrics:
+            main:
+              column: Order ID
+              aggregation: count
+          order_by:
+            column: Order Date
+            type: asc
+          series:
+            - column: count_Order_ID
+              type: line
+          stacked_series: false
+          properties:
+            label: "Evolution of # Orders"
+            description: ""
+    - "6":
+        min:
+          w: 1
+          h: 1
+        max: {}
+        w: 2
+        h: 3
+        x: 0
+        y: 3
+      id: _mleuo0ss2
+      chart:
+        type: ui
+        configuration:
+          dataset: superstores_orders
+          dimensions:
+            main: Segment
+          metrics:
+            main:
+              column: Order ID
+              aggregation: count
+          order_by:
+            column: count_Order_ID
+            type: desc
+          series:
+            - column: count_Order_ID
+              type: bar
+          stacked_series: false
+          properties:
+            label: "# Orders per segment"
+            description: ""
+    - "6":
+        min:
+          w: 1
+          h: 1
+        max: {}
+        w: 2
+        h: 3
+        x: 2
+        y: 3
+      id: _a4rwbeqon
+      chart:
+        type: ui
+        configuration:
+          dataset: superstores_orders
+          dimensions:
+            main: Category
+          metrics:
+            main:
+              column: Order ID
+              aggregation: count
+          order_by:
+            column: count_Order_ID
+            type: desc
+          series:
+            - column: count_Order_ID
+              type: bar
+          stacked_series: false
+          properties:
+            label: "# Orders per category"
+            description: ""
+    - "6":
+        min:
+          w: 1
+          h: 1
+        max: {}
+        w: 2
+        h: 6
+        x: 4
+        y: 0
+      id: _uat49x2xf
+      chart:
+        type: ui
+        configuration:
+          dataset: superstores_orders
+          dimensions:
+            main: State
+          metrics:
+            main:
+              column: Order ID
+              aggregation: count
+          order_by:
+            column: count_Order_ID
+            type: asc
+          series:
+            - column: count_Order_ID
+              type: bar
+          dimension_on_Y_axis: true
+          stacked_series: false
+          properties:
+            label: "# Orders per state"
+            description: ""

@@ -8,8 +8,7 @@
     let {
         columnOptions,
         chartDataColumns,
-        orderByColumn = $bindable(),
-        orderByType = $bindable(),
+        orderByConfiguration = $bindable(),
     } = $props();
 
     let orderByOptions = $derived(generateOrderByColumns(columnOptions, chartDataColumns));
@@ -28,8 +27,6 @@
         const newChartOptions = chartDataColumnsArray.map((column) => ({
             label: column,
             value: column,
-            // Add any other default properties you need for these new objects
-            // For example: value: column, type: 'category' etc.
         }));
 
         // 3. Add the new objects at the beginning of the filtered array
@@ -74,7 +71,7 @@
                     <Combobox
                         boxOptions={orderByOptions}
                         objectName="column"
-                        bind:value={orderByColumn}
+                        bind:value={orderByConfiguration.column}
                     />
                 </div>
 
@@ -85,7 +82,7 @@
                     <Combobox
                         boxOptions={orderByTypeOptions}
                         objectName="order type"
-                        bind:value={orderByType}
+                        bind:value={orderByConfiguration.type}
                     />
                 </div>
             </div>
