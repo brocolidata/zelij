@@ -222,7 +222,7 @@
             ...chartOptions,
             dataset: { source: $datasetRows }
         };
-        chart.setOption(fullChartOptions);
+        chart.setOption(fullChartOptions, {notMerge: true});
     }
 
     async function refreshTile() {
@@ -234,7 +234,7 @@
                 ...chartOptions, 
                 dataset: { source: $datasetRows } 
             };
-            chart.setOption(fullChartOptions);
+            chart.setOption(fullChartOptions, {notMerge: true});
         } else {
             const sqlQuery = buildChartQuery(chartConfiguration.configuration, datasetColumns);
             const rows = await getDatasetFromQuery(sqlQuery);
@@ -245,7 +245,7 @@
                 ...UIChartOptions,
                 dataset: { source: $datasetRows }
             };
-            chart.setOption(fullChartOptions);
+            chart.setOption(fullChartOptions, {notMerge: true});
         }
         chart.hideLoading();
     }
