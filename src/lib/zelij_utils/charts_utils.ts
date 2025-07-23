@@ -323,7 +323,7 @@ export function buildOptionsFromUI({
                 x: dimension_on_Y_axis ? series.column : mainDimension,
                 y: dimension_on_Y_axis ? mainDimension : series.column,
             },
-            ...(stacked_series && { stack: 'total' }),
+            ...(stacked_series === true ? { stack: 'total' } : {}),
             select: {
                 itemStyle: selectItemStyle
             },
