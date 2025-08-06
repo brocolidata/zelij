@@ -342,7 +342,7 @@
     <!-- Fullscreen button -->
     {#if !editMode}
         <button
-            class="absolute top-2 right-2 z-10 p-2 rounded-md hover:bg-background/95 transition-colors duration-200 backdrop-blur-sm"
+            class="absolute top-2 right-2 z-10 rounded-md transition-colors duration-200 backdrop-blur-sm"
             class:top-4={editMode}
             class:right-4={editMode}
             onclick={toggleFullscreen}
@@ -353,7 +353,7 @@
                 <Shrink size={16}/>
             {:else}
                 <!-- Enter fullscreen icon -->
-                <Expand size={16}/>
+                <Expand class="text-gray-200 dark:text-gray-800 hover:text-primary dark:hover:text-gray-200" size={16}/>
             {/if}
         </button>
     {/if}
