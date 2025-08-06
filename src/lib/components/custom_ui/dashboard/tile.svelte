@@ -225,14 +225,13 @@
     mode.subscribe(
         async theme => {
             if (initializedChart) {
-                filtersStore.set([]); 
-                await reinitChart();
+                chart.setTheme($mode === 'dark' ? 'default' : 'dark');
             }
         }
     )
     dataLoaded.subscribe(
         isLoaded => {
-            if (isLoaded && initializedChart) {
+            if (initializedChart) {
                 refreshTile()
             }
         }
