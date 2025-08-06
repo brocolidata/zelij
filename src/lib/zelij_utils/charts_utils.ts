@@ -337,10 +337,6 @@ export function buildOptionsFromUI({
         dataset: {
             // The `source` will be injected separately in the component
         },
-        grid: {
-            containLabel: true,
-            left: 2
-        },
         title: {
             text: properties?.label || '',
             subtext: properties?.description || '',
@@ -359,9 +355,6 @@ export function buildOptionsFromUI({
         yAxis: {
             type: dimension_on_Y_axis ? dimensionAxisType : 'value',
             name: yAxisField,
-            axisLabel: {
-                width: 200
-            }
         },
         series: series.map((series) => ({
             type: series.type || 'bar',

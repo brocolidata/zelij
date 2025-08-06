@@ -14,7 +14,7 @@
     } from "$lib/zelij_utils/charts_utils";
     import { getContext } from 'svelte';
     import { getDatasetColumns, dataLoaded } from '$lib/zelij_utils/stores';
-
+    import { Expand, Shrink } from '@lucide/svelte';
 
     let { remove, dataItem = $bindable(), editMode, onUpdate } = $props();
     let lastHighlighted = $state(null);
@@ -27,6 +27,11 @@
     let filtersStore = getContext('filters');
     let chartFilters = $state([]);
     let datasetColumns = $derived(getDatasetColumns(datasetName));
+    
+    // Fullscreen state and related variables
+    let isFullscreen = $state(false);
+    let fullscreenContainer = $state();
+    let fullscreenUnsubscribe = $state(null);
     
     onMount(async () => {
         datasetName = extractDatasetFromChartConfiguration(dataItem?.chart);
@@ -58,11 +63,23 @@
         }    
         initializedChart = true;
         
+        // Listen for fullscreen changes
+        document.addEventListener('fullscreenchange', handleFullscreenChange);
+        document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+        document.addEventListener('mozfullscreenchange', handleFullscreenChange);
+        document.addEventListener('MSFullscreenChange', handleFullscreenChange);
+        
         return () => {
             unsubscribe?.();
+            fullscreenUnsubscribe?.();
             chart.dispose();
+            document.removeEventListener('fullscreenchange', handleFullscreenChange);
+            document.removeEventListener('webkitfullscreenchange', handleFullscreenChange);
+            document.removeEventListener('mozfullscreenchange', handleFullscreenChange);
+            document.removeEventListener('MSFullscreenChange', handleFullscreenChange);
         };
     });
+    
     $effect(() => {
         if ($dataLoaded && initializedChart === true) {
             setupEventListeners();   
@@ -148,17 +165,73 @@
         });
 	}
 
+    // Fullscreen functionality
+    async function toggleFullscreen() {
+        if (!isFullscreen) {
+            await enterFullscreen();
+        } else {
+            await exitFullscreen();
+        }
+    }
+    
+    async function enterFullscreen() {
+        try {
+            if (fullscreenContainer.requestFullscreen) {
+                await fullscreenContainer.requestFullscreen();
+            } else if (fullscreenContainer.webkitRequestFullscreen) {
+                await fullscreenContainer.webkitRequestFullscreen();
+            } else if (fullscreenContainer.mozRequestFullScreen) {
+                await fullscreenContainer.mozRequestFullScreen();
+            } else if (fullscreenContainer.msRequestFullscreen) {
+                await fullscreenContainer.msRequestFullscreen();
+            }
+        } catch (error) {
+            console.error('Error entering fullscreen:', error);
+        }
+    }
+    
+    async function exitFullscreen() {
+        try {
+            if (document.exitFullscreen) {
+                await document.exitFullscreen();
+            } else if (document.webkitExitFullscreen) {
+                await document.webkitExitFullscreen();
+            } else if (document.mozCancelFullScreen) {
+                await document.mozCancelFullScreen();
+            } else if (document.msExitFullscreen) {
+                await document.msExitFullscreen();
+            }
+        } catch (error) {
+            console.error('Error exiting fullscreen:', error);
+        }
+    }
+    
+    function handleFullscreenChange() {
+        const isCurrentlyFullscreen = !!(
+            document.fullscreenElement ||
+            document.webkitFullscreenElement ||
+            document.mozFullScreenElement ||
+            document.msFullscreenElement
+        );
+        
+        isFullscreen = isCurrentlyFullscreen;
+        
+        // Resize chart after fullscreen change
+        setTimeout(() => {
+            resizeChart();
+        }, 100);
+    }
+
     mode.subscribe(
         async theme => {
             if (initializedChart) {
-                filtersStore.set([]); 
-                await reinitChart();
+                chart.setTheme($mode === 'dark' ? 'default' : 'dark');
             }
         }
     )
     dataLoaded.subscribe(
         isLoaded => {
-            if (isLoaded && initializedChart) {
+            if (initializedChart) {
                 refreshTile()
             }
         }
@@ -252,7 +325,11 @@
 
 </script>
 
-<div class="h-full w-full flex flex-col bg-card">
+<div 
+    bind:this={fullscreenContainer}
+    class="h-full w-full flex flex-col bg-card relative"
+    class:fullscreen-active={isFullscreen}
+>
     {#if editMode}
         <TileEditBar 
             remove={() => remove(dataItem)} 
@@ -261,9 +338,57 @@
         />
     {/if}
 
+    <!-- Fullscreen button -->
+    {#if !editMode}
+        <button
+            class="absolute top-2 right-2 z-10 rounded-md transition-colors duration-200 backdrop-blur-sm"
+            class:top-4={editMode}
+            class:right-4={editMode}
+            onclick={toggleFullscreen}
+            title={isFullscreen ? 'Exit Fullscreen' : 'Enter Fullscreen'}
+        >
+            {#if isFullscreen}
+                <!-- Exit fullscreen icon -->
+                <Shrink size={16}/>
+            {:else}
+                <!-- Enter fullscreen icon -->
+                <Expand class="text-gray-200 dark:text-gray-800 hover:text-primary dark:hover:text-gray-200" size={16}/>
+            {/if}
+        </button>
+    {/if}
+    
+
     <div
         bind:this={chartContainer}
         class="chart-container items-center justify-center w-full flex-grow"
+        class:fullscreen-chart={isFullscreen}
         use:resize onresized={resizeChart}
     ></div>
 </div>
+
+<style>
+    .fullscreen-active {
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        width: 100vw !important;
+        height: 100vh !important;
+        z-index: 9999 !important;
+        background: var(--background) !important;
+    }
+    
+    .fullscreen-chart {
+        padding: 1rem;
+    }
+    
+    /* Ensure proper styling for different fullscreen states */
+    :global(.fullscreen-active .chart-container) {
+        height: 100% !important;
+        width: 100% !important;
+    }
+    
+    /* Hide scrollbars in fullscreen mode */
+    .fullscreen-active {
+        overflow: hidden;
+    }
+</style>

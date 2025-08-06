@@ -119,3 +119,11 @@
     @apply bg-background text-foreground;
   }
 }
+
+.svlt-grid-resizer::after {
+    border-color: darkgray !important;
+}
+
+.dark .svlt-grid-resizer::after {
+    border-color: lightgray !important;
+}
