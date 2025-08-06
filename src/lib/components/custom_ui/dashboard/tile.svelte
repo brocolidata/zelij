@@ -340,21 +340,24 @@
     {/if}
 
     <!-- Fullscreen button -->
-    <button
-        class="absolute top-2 right-2 z-10 p-2 rounded-md hover:bg-background/95 transition-colors duration-200 backdrop-blur-sm"
-        class:top-4={editMode}
-        class:right-4={editMode}
-        onclick={toggleFullscreen}
-        title={isFullscreen ? 'Exit Fullscreen' : 'Enter Fullscreen'}
-    >
-        {#if isFullscreen}
-            <!-- Exit fullscreen icon -->
-            <Shrink size={16}/>
-        {:else}
-            <!-- Enter fullscreen icon -->
-            <Expand size={16}/>
-        {/if}
-    </button>
+    {#if !editMode}
+        <button
+            class="absolute top-2 right-2 z-10 p-2 rounded-md hover:bg-background/95 transition-colors duration-200 backdrop-blur-sm"
+            class:top-4={editMode}
+            class:right-4={editMode}
+            onclick={toggleFullscreen}
+            title={isFullscreen ? 'Exit Fullscreen' : 'Enter Fullscreen'}
+        >
+            {#if isFullscreen}
+                <!-- Exit fullscreen icon -->
+                <Shrink size={16}/>
+            {:else}
+                <!-- Enter fullscreen icon -->
+                <Expand size={16}/>
+            {/if}
+        </button>
+    {/if}
+    
 
     <div
         bind:this={chartContainer}
