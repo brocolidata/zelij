@@ -44,7 +44,7 @@
                             <Tabs.Trigger value="advanced">Advanced Editor</Tabs.Trigger>
                         </Tabs.List>
                 </Sheet.Header>
-                <div class="flex-grow overflow-y-auto p-4">
+                <div class="flex-grow overflow-y-auto">
                     <Tabs.Content value="ui">
                         <UiEditor bind:configuration={chartConfiguration.configuration} onSave={saveChart} />
                     </Tabs.Content>
