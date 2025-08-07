@@ -29,6 +29,8 @@ dashboards:
           series:
             - column: count_Order_ID
               type: line
+              number_format:
+                type: integer
           stacked_series: false
           properties:
             label: "Evolution of # Orders"
@@ -59,6 +61,8 @@ dashboards:
           series:
             - column: count_Order_ID
               type: bar
+              number_format:
+                type: integer
           stacked_series: false
           properties:
             label: "# Orders per segment"
@@ -89,6 +93,8 @@ dashboards:
           series:
             - column: count_Order_ID
               type: bar
+              number_format:
+                type: integer
           stacked_series: false
           properties:
             label: "# Orders per category"
@@ -119,6 +125,8 @@ dashboards:
           series:
             - column: count_Order_ID
               type: bar
+              number_format:
+                type: integer
           dimension_on_Y_axis: true
           stacked_series: false
           properties:

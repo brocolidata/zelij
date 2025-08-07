@@ -47,7 +47,7 @@
 	}
 
 	function addSeries() {
-		seriesConfiguration = [...seriesConfiguration, { column: "", type: "line" }];
+		seriesConfiguration = [...seriesConfiguration, { column: "", type: "line" , number_format: {"type":"integer"}}];
 	}
 
 	
