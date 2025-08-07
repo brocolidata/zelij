@@ -37,6 +37,7 @@ export function inferSeries({
         return [{
             column: `${mainMetric.aggregation}_${mainMetric.column.replace(/\s/g, "_")}`,
             type: "bar", // or another chart type depending on preference
+            number_format: {"type":"integer"},
         }];
     }
 
@@ -48,6 +49,7 @@ export function inferSeries({
             .map((col) => ({
                 column: col,
                 type: "bar", // or another chart type depending on preference
+                number_format: {"type":"integer"},
             }));
     }
 
@@ -59,6 +61,7 @@ export function inferSeries({
             .map((m) => ({
                 column: `${m.aggregation}_${m.column}`,
                 type: "bar", // you can customize the type if needed
+                number_format: {"type":"integer"},
             }));
     }
 
@@ -294,6 +297,31 @@ export function getColumnType(datasetName: string, columnName: string) {
     return column ? column.type : undefined;
 }
 
+function formatNumber(value, format) {
+    if (!format || typeof value !== 'number') return value;
+
+    const { type, currency, decimals } = format;
+
+    switch (type) {
+        case 'currency':
+            return `${new Intl.NumberFormat(undefined, {
+                minimumFractionDigits: decimals ?? 2,
+                maximumFractionDigits: decimals ?? 2,
+            }).format(value)} ${currency ?? ''}`;
+        case 'integer':
+            return new Intl.NumberFormat(undefined, {
+                maximumFractionDigits: 0
+            }).format(value);
+        case 'decimals':
+            return new Intl.NumberFormat(undefined, {
+                minimumFractionDigits: decimals ?? 2,
+                maximumFractionDigits: decimals ?? 2,
+            }).format(value);
+        default:
+            return value;
+    }
+}
+
 export function buildOptionsFromUI({
     dataset,
     dimensions,
@@ -302,7 +330,7 @@ export function buildOptionsFromUI({
     dimension_on_Y_axis,
     stacked_series,
     properties,
-    theme = 'light' // default to light mode
+    theme = 'light'
 }) {
     const mainDimension = dimensions?.main;
     const secondaryDimension = dimensions?.secondary;
@@ -314,16 +342,16 @@ export function buildOptionsFromUI({
         return {};
     }
 
-    const xAxisField = dimension_on_Y_axis ? mainDimension : mainMetric.column;
-    const yAxisField = dimension_on_Y_axis ? mainMetric.column : mainDimension;
+    const xAxisField = dimension_on_Y_axis ? mainMetric.column : mainDimension;
+    const yAxisField = dimension_on_Y_axis ? mainDimension : mainMetric.column;
 
-    // Define theme-aware selection style
     const selectItemStyle = {
         borderColor: theme === 'dark' ? '#fff' : '#000',
         borderWidth: 2,
         shadowBlur: 8,
         shadowColor: theme === 'dark' ? 'rgba(255, 255, 255, 0.4)' : 'rgba(0, 0, 0, 0.4)'
     };
+
     let dimensionAxisType;
     if (["VARCHAR", "BIGINT", "DOUBLE"].includes(mainDimensionType)) {
         dimensionAxisType = "category";
@@ -331,7 +359,12 @@ export function buildOptionsFromUI({
         dimensionAxisType = "time";
     } else {
         dimensionAxisType = "value";
-    };
+    }
+
+    // Create a lookup map from series name to its number_format
+    const seriesFormatMap = Object.fromEntries(
+        series.map(s => [s.column, s.number_format])
+    );
 
     return {
         dataset: {
@@ -343,7 +376,20 @@ export function buildOptionsFromUI({
             left: 'center'
         },
         tooltip: {
-            trigger: 'axis'
+            trigger: 'axis',
+            formatter: function (params) {
+                const paramList = Array.isArray(params) ? params : [params];
+                const axisLabel = paramList[0]?.axisValueLabel ?? '';
+                const lines = [`<b>${axisLabel}</b>`];
+
+                for (const item of paramList) {
+                    const value = item.value?.[item.encode?.y?.[0]] ?? item.data?.[item.seriesName];
+                    const format = seriesFormatMap[item.seriesName];
+                    const formattedValue = formatNumber(value, format);
+                    lines.push(`${item.marker} ${item.seriesName}: ${formattedValue}`);
+                }
+                return lines.join('<br/>');
+            }
         },
         legend: {
             top: 'bottom'
@@ -356,12 +402,12 @@ export function buildOptionsFromUI({
             type: dimension_on_Y_axis ? dimensionAxisType : 'value',
             name: yAxisField,
         },
-        series: series.map((series) => ({
-            type: series.type || 'bar',
-            name: series.column,
+        series: series.map((s) => ({
+            type: s.type || 'bar',
+            name: s.column,
             encode: {
-                x: dimension_on_Y_axis ? series.column : mainDimension,
-                y: dimension_on_Y_axis ? mainDimension : series.column,
+                x: dimension_on_Y_axis ? s.column : mainDimension,
+                y: dimension_on_Y_axis ? mainDimension : s.column,
             },
             ...(stacked_series === true ? { stack: 'total' } : {}),
             select: {
@@ -372,23 +418,22 @@ export function buildOptionsFromUI({
                 focus: 'self'
             }
         })),
-        ...(
-            dimensionAxisType === "time" ? {
-                dataZoom: [
-                    {
-                        type: 'inside',
-                        start: 0,
-                        end: 10
-                    },
-                    {
-                        start: 0,
-                        end: 10
-                    }
-                ],
-            } : {}
-        ),
+        ...(dimensionAxisType === "time" ? {
+            dataZoom: [
+                {
+                    type: 'inside',
+                    start: 0,
+                    end: 10
+                },
+                {
+                    start: 0,
+                    end: 10
+                }
+            ],
+        } : {}),
     };
 }
+
 
 export function extractDatasetFromChartConfiguration(chartConfiguration: any): string | null {
 
