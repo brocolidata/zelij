@@ -370,6 +370,10 @@ export function buildOptionsFromUI({
         dataset: {
             // The `source` will be injected separately in the component
         },
+        grid: {
+            left: '3%',
+            right: '3%',
+        },
         title: {
             text: properties?.label || '',
             subtext: properties?.description || '',
@@ -461,11 +465,11 @@ export function buildOptionsFromUI({
         },
         xAxis: {
             type: dimension_on_Y_axis ? 'value' : dimensionAxisType,
-            name: xAxisField
+            ...(dimension_on_Y_axis ? {name: xAxisField} : {})
         },
         yAxis: {
             type: dimension_on_Y_axis ? dimensionAxisType : 'value',
-            name: yAxisField,
+            ...(dimension_on_Y_axis ? {} : {name: yAxisField})
         },
         series: series.map((s) => ({
             type: s.type || 'bar',
