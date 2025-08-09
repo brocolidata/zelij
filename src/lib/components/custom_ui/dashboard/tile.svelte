@@ -223,9 +223,28 @@
     }
 
     mode.subscribe(
-        async theme => {
+        theme => {
             if (initializedChart) {
-                chart.setTheme($mode === 'dark' ? 'default' : 'dark');
+                chart.setTheme(theme === 'dark' ? 'dark' : 'default');
+                chart.setOption(
+                    {
+                        toolbox: {
+                            iconStyle: {
+                                borderColor: theme === "light" ? '#f3f4f6' : '#1e2939'
+                            },
+                            emphasis: {
+                                iconStyle: {
+                                    borderColor: theme === "light" ? '#1e2939' : '#f3f4f6'
+                                }
+                            },
+                            feature: {
+                                dataView: {
+                                    backgroundColor: theme === 'dark' ? '#1f2937' : '#ffffff'
+                                }
+                            }
+                        }
+                    }
+                );
             }
         }
     )
@@ -299,27 +318,37 @@
     }
 
     async function refreshTile() {
+        let fullChartOptions;
         if (chartConfiguration.type === "advanced") {
             const { sqlQuery, chartOptions } = chartConfiguration.configuration;
             const rows = await getDatasetFromQuery(sqlQuery);
             datasetRows.set(rows);
-            const fullChartOptions = { 
+            fullChartOptions = { 
                 ...chartOptions, 
                 dataset: { source: $datasetRows } 
             };
-            chart.setOption(fullChartOptions, {notMerge: true});
         } else {
             const sqlQuery = buildChartQuery(chartConfiguration.configuration, datasetColumns);
             const rows = await getDatasetFromQuery(sqlQuery);
             const UIChartOptions = buildOptionsFromUI(
                 {...chartConfiguration.configuration, theme:$mode})
             datasetRows.set(rows);
-            const fullChartOptions = {
+            fullChartOptions = {
                 ...UIChartOptions,
                 dataset: { source: $datasetRows }
             };
-            chart.setOption(fullChartOptions, {notMerge: true});
         }
+        // Add the custom fullscreen button handler to the options object
+        if (fullChartOptions.toolbox && fullChartOptions.toolbox.feature) {
+            fullChartOptions.toolbox.feature.myFullscreen = {
+                ...fullChartOptions.toolbox.feature.myFullscreen,
+                onclick: function() {
+                    toggleFullscreen();
+                }
+            };
+        }
+        // Set all chart options in a single call
+        chart.setOption(fullChartOptions, { notMerge: true });
         chart.hideLoading();
     }
 
@@ -337,26 +366,6 @@
             onSave={saveTile}
         />
     {/if}
-
-    <!-- Fullscreen button -->
-    {#if !editMode}
-        <button
-            class="absolute top-2 right-2 z-10 rounded-md transition-colors duration-200 backdrop-blur-sm"
-            class:top-4={editMode}
-            class:right-4={editMode}
-            onclick={toggleFullscreen}
-            title={isFullscreen ? 'Exit Fullscreen' : 'Enter Fullscreen'}
-        >
-            {#if isFullscreen}
-                <!-- Exit fullscreen icon -->
-                <Shrink size={16}/>
-            {:else}
-                <!-- Enter fullscreen icon -->
-                <Expand class="text-gray-200 dark:text-gray-800 hover:text-primary dark:hover:text-gray-200" size={16}/>
-            {/if}
-        </button>
-    {/if}
-    
 
     <div
         bind:this={chartContainer}
