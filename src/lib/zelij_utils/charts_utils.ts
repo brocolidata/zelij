@@ -391,6 +391,71 @@ export function buildOptionsFromUI({
                 return lines.join('<br/>');
             }
         },
+        toolbox: {
+            iconStyle: {
+                borderColor: theme === "light" ? '#f3f4f6' : '#1e2939'
+            },
+            emphasis: {
+                iconStyle: {
+                    borderColor: theme === "light" ? '#1e2939' : '#f3f4f6'
+                }
+            },
+            feature: {
+                dataView: {
+                    show: true,
+                    readOnly: true,
+                    backgroundColor: theme === 'dark' ? '#1f2937' : '#ffffff',
+                    optionToContent: (opt) => {
+                        const datasetSource = opt.dataset?.[0]?.source || [];
+                        if (!datasetSource.length) {
+                            return `<div class="p-4 text-gray-500 dark:text-gray-400">No data</div>`;
+                        }
+
+                        const headers = Object.keys(datasetSource[0]);
+
+                        let table = `
+                        <div class="overflow-x-auto p-4 bg-white dark:bg-gray-900">
+                            <table class="min-w-full border border-gray-300 dark:border-gray-700 text-sm">
+                                <thead class="bg-gray-50 dark:bg-gray-800">
+                                    <tr>
+                                        ${headers.map(h =>`<th class="px-4 py-2 text-left font-medium text-gray-700 dark:text-gray-200">${h}</th>`).join('')}
+                                    </tr>
+                                </thead>
+                                <tbody class="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
+                        `;
+
+                        datasetSource.forEach(row => {
+                            table += `
+                                <tr class="hover:bg-gray-100 dark:hover:bg-gray-800">
+                                ${headers.map(h => {
+                                    const value = row[h];
+                                    const format = seriesFormatMap[h];
+                                    const formattedValue = formatNumber(value, format);
+                                    return `<td class="px-4 py-2 text-gray-900 dark:text-gray-100">${formattedValue ?? ''}</td>`;
+                                }).join('')}
+                                </tr>
+                            `;
+                        });
+
+                        table += `
+                            </tbody>
+                            </table>
+                        </div>
+                        `;
+
+                        return table;
+                    }
+                },
+                myFullscreen: {
+                    show: true,
+                    title: 'Toggle Fullscreen',
+                    icon: 'path://M10,0L0,0L0,10L2,10L2,2L10,2ZM0,20L10,20L10,18L2,18L2,10L0,10ZM20,10L20,20L10,20L10,18L18,18L18,10ZM10,0L20,0L20,10L18,10L18,2L10,2Z',
+                    onclick: function () {
+                        // This function will be overwritten in the Svelte component
+                    }
+                }
+            }
+        },
         legend: {
             top: 'bottom'
         },
