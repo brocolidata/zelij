@@ -93,6 +93,22 @@ async function createTable(data_source) {
     }
 }
 
+export async function uploadParquetToTable(parquetFile, tableName) {
+    try {
+        
+        console.log(`Loading ${tableName} uploaded by user`);
+        const db = await instantiateDuckDb();
+        await db.registerFileHandle(parquetFile.name, parquetFile, duckdb.DuckDBDataProtocol.BROWSER_FILEREADER, true);
+        const conn = await db.connect();
+        await conn.query(`CREATE TABLE ${tableName} AS SELECT * FROM parquet_scan('${parquetFile.name}')`);
+        await conn.close();
+        console.log(`Successfully loaded ${tableName}`);
+    } catch (error) {
+        console.error(`Error loading table ${tableName}:`, error);
+        throw error;
+    }
+}
+
 export async function loadData() {
     const data_sources = getDataSources();
     try {

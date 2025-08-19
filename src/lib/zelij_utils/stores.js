@@ -1,12 +1,14 @@
 import { get, writable } from 'svelte/store';
 import { getDashboards, getDataApps, getDataSources } from '$lib/zelij_utils/zelij_config'
 import { fetchTableColumns } from "$lib/zelij_utils/duckdb";
+import { localStorageStore } from '$lib/zelij_utils/localStorage_stores.js';
 
-// Initial index state for dashboards, data sources
-export const dashboardsIndex = writable([]);
-export const dataAppsIndex = writable([]);
-export const dataSourcesIndex = writable([]);
+
 export const dataLoaded = writable(false);
+
+export const dashboardsIndex = localStorageStore('dashboardsIndex', []);
+export const dataAppsIndex = localStorageStore('dataAppsIndex', []);
+export const dataSourcesIndex = localStorageStore('dataSourcesIndex', []);
 
 
 /**
@@ -89,6 +91,37 @@ export function createDataApp(dataApp) {
   });
 }
 
+export async function createDataSource(dataSourceFile, dataSourceName, dataSourceLabel) {
+  let dataSource = {
+    name: dataSourceName,
+    label: dataSourceLabel,
+    path: dataSourceFile.name,
+    definition_source: 'in-memory',
+  };
+  const columns = await fetchTableColumns(dataSource.name);
+  dataSource = { ...dataSource, columns };
+  dataSourcesIndex.update((currentDataSources) => {
+    // Check if the data app already exists (e.g., by name) to avoid duplicates
+    if (currentDataSources.some(ds => ds.name === dataSource.name)) {
+      console.warn(`Data app with name "${dataSource.name}" already exists.`);
+      return currentDataSources;
+    }
+    // Add the new data app to the list
+    console.log(`Successfully added ${dataSource.name} to dataAppsIndex`)
+    return [...currentDataSources, dataSource];
+  });
+}
+
+export function deleteDataSource(dataSourceName) {
+  dataSourcesIndex.update((dataSources) => {
+    if (dataSources.some((ds) => ds.name === dataSourceName)) {
+      return dataSources.filter((ds) => ds.name !== dataSourceName);
+    }
+    console.warn(`Data Source with name "${dataSourceName}" does not exist.`);
+    return dataSources;
+  });
+}
+
 /**
  * Function to delete a dashboard by name.
  * @param {string} name - The name of the dashboard to delete.
@@ -101,6 +134,35 @@ export function deleteDashboard(name) {
     console.warn(`Dashboard with name "${name}" does not exist.`);
     return dashboards; // No changes if the name doesn't exist
   });
+}
+
+/**
+ * Function to delete a data app by name.
+ * @param {string} name - The name of the data app to delete.
+ */
+export function deleteDataApp(dataAppName) {
+  dataAppsIndex.update((dataApps) => {
+    if (dataApps.some((da) => da.name === dataAppName)) {
+      return dataApps.filter((da) => da.name !== dataAppName);
+    }
+    console.warn(`Data app with name "${name}" does not exist.`);
+    return dataApps; // No changes if the name doesn't exist
+  });
+}
+
+/**
+ * Function to delete a data asset by name.
+ * @param {string} name - The name of the data asset to delete.
+ */
+export function deleteAsset(assetType, assetName) {
+  switch (assetType) {
+    case 'data_sources':
+      deleteDataSource(assetName);
+    case 'data_apps':
+      deleteDataApp(assetName);
+    case 'dashboards':
+      deleteDashboard(assetName);
+  }
 }
 
 /**
@@ -242,45 +304,45 @@ export function updateDashboardsInDataApp(dataAppName, dashboardNames) {
 }
 
 export async function updateDataSourcesWithColumnTypes() {
-    // 1. Get the current value of the store
-    let currentDataSources = [];
-    dataSourcesIndex.subscribe(value => {
-        currentDataSources = value;
-    })(); // Call the unsubscribe function immediately to get the current value
+  // 1. Get the current value of the store
+  let currentDataSources = [];
+  dataSourcesIndex.subscribe(value => {
+    currentDataSources = value;
+  })(); // Call the unsubscribe function immediately to get the current value
 
-    // 2. Create a copy to work with
-    const updatedDataSources = [...currentDataSources];
+  // 2. Create a copy to work with
+  const updatedDataSources = [...currentDataSources];
 
-    // 3. Map over the data sources and create promises for fetching columns
-    const fetchPromises = updatedDataSources.map(async (dataSource) => {
-        // Ensure dataSource.name exists and is a string for fetchTableColumns
-        if (!dataSource.columns && typeof dataSource.name === 'string') {
-            try {
-                const columns = await fetchTableColumns(dataSource.name);
-                return {
-                    ...dataSource,
-                    columns // Assuming 'columns' is the property name for column types
-                };
-            } catch (error) {
-                console.error(`Failed to fetch columns for table ${dataSource.name}:`, error);
-                return {
-                    ...dataSource,
-                    columns: [] // Return empty array or handle error appropriately
-                };
-            }
-        }
-        return dataSource; // Return original if already has columns or name is not valid
-    });
+  // 3. Map over the data sources and create promises for fetching columns
+  const fetchPromises = updatedDataSources.map(async (dataSource) => {
+    // Ensure dataSource.name exists and is a string for fetchTableColumns
+    if (!dataSource.columns && typeof dataSource.name === 'string') {
+      try {
+        const columns = await fetchTableColumns(dataSource.name);
+        return {
+          ...dataSource,
+          columns // Assuming 'columns' is the property name for column types
+        };
+      } catch (error) {
+        console.error(`Failed to fetch columns for table ${dataSource.name}:`, error);
+        return {
+          ...dataSource,
+          columns: [] // Return empty array or handle error appropriately
+        };
+      }
+    }
+    return dataSource; // Return original if already has columns or name is not valid
+  });
 
-    // 4. Await all promises to resolve
-    const finalDataSources = await Promise.all(fetchPromises);
+  // 4. Await all promises to resolve
+  const finalDataSources = await Promise.all(fetchPromises);
 
-    // 5. Update the store with the fully resolved data
-    dataSourcesIndex.set(finalDataSources);
-    // OR if you want to use update for some reason (less direct in this scenario):
-    // dataSourcesIndex.update(() => finalDataSources);
+  // 5. Update the store with the fully resolved data
+  dataSourcesIndex.set(finalDataSources);
+  // OR if you want to use update for some reason (less direct in this scenario):
+  // dataSourcesIndex.update(() => finalDataSources);
 
-    console.log("dataSourcesIndex updated with column types:", finalDataSources);
+  console.log("dataSourcesIndex updated with column types:", finalDataSources);
 }
 
 export function getDataSourceByName(name) {
@@ -289,8 +351,8 @@ export function getDataSourceByName(name) {
 }
 
 export function getDatasetColumns(name) {
-    const dataSourceObj = getDataSourceByName(name);
-    return dataSourceObj.columns;
+  const dataSourceObj = getDataSourceByName(name);
+  return dataSourceObj.columns;
 }
 
 
