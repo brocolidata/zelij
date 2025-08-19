@@ -20,12 +20,12 @@
     } from "$lib/zelij_utils/charts_utils";
     import { Separator } from "$lib/components/ui/separator/index.js";
     import { Label } from "$lib/components/ui/label/index.js";
-    import { dataLoaded, getDatasetColumns } from '$lib/zelij_utils/stores';
+    import { dataLoaded, getDatasetColumns, dataSourcesIndex } from '$lib/zelij_utils/stores';
     
     let { configuration = $bindable(), onSave } = $props(); 
 
-    const data_sources = getDataSources();
-    const dataSourceOptions = getDataSourceOptions(data_sources);
+    // const data_sources = getDataSources();
+    const dataSourceOptions = getDataSourceOptions($dataSourcesIndex);
     let chartProperties = $state(configuration?.properties || {});
     let dataSource = $state(configuration?.dataset || "");
     let datasetColumns = $derived(getDatasetColumns(dataSource));

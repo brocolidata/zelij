@@ -28,6 +28,7 @@
     const dataTypeIcons = {
         BIGINT: Hash,
         DOUBLE: Hash,
+        INTEGER: Hash,
         VARCHAR: CaseSensitive,
         TIMESTAMP_NS: CalendarDays,
     };
