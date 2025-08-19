@@ -1,12 +1,8 @@
 <script lang="ts" generics="TData, TValue">
     import {
-        type ColumnDef,
         type VisibilityState,
         getCoreRowModel,
-        getPaginationRowModel,
-        getSortedRowModel,
         type SortingState,
-        type ColumnSort,
     } from "@tanstack/table-core";
     import {
         createSvelteTable,
@@ -27,17 +23,15 @@
         ChevronLeftIcon,
     } from "@lucide/svelte";
 
-    type DatasetColumn = { label: string; type: string; };
 
     type DataTableProps<TData, TValue> = {
         datasetLabel: string;
         data: TData[];
-        columns: ColumnDef<TData, TValue>[];
+        columns;
         rowCount: number;
         pagination: { pageIndex: number; pageSize: number };
         sorting: SortingState;
         columnVisibility: VisibilityState;
-        datasetColumns: DatasetColumn[];
     };
 
     let {
@@ -45,54 +39,16 @@
         data,
         columns,
         rowCount,
-        datasetColumns,
         pagination = $bindable(),
         sorting = $bindable(),
         columnVisibility = $bindable(),
     }: DataTableProps<TData, TValue> = $props();
 
-    const allPossibleTableColumns: ColumnDef<TData, TValue>[] = $derived(
-        datasetColumns.map(col => ({
-            accessorKey: col.label,
-            header: col.label,
-            enableSorting: true,
-            enableHiding: true,
-        }))
-    );
-
-    $effect(() => {
-        if (datasetColumns && datasetColumns.length > 0) {
-            const currentColumnIds = Object.keys(columnVisibility);
-            const datasetColumnIds = datasetColumns.map(col => col.label);
-
-            let needsUpdate = false;
-            const newVisibility: VisibilityState = { ...columnVisibility };
-
-            datasetColumnIds.forEach(id => {
-                if (!(id in newVisibility)) {
-                    newVisibility[id] = true;
-                    needsUpdate = true;
-                }
-            });
-
-            currentColumnIds.forEach(id => {
-                if (!datasetColumnIds.includes(id)) {
-                    delete newVisibility[id];
-                    needsUpdate = true;
-                }
-            });
-
-            if (needsUpdate || Object.keys(columnVisibility).length === 0) {
-                 columnVisibility = newVisibility;
-            }
-        }
-    });
-
     const table = createSvelteTable({
         get data() {
             return data;
         },
-        columns: allPossibleTableColumns,
+        columns,
         state: {
             get pagination() {
                 return pagination;
@@ -122,8 +78,6 @@
         enableSortingRemoval: true,
         enableHiding: true,
     });
-
-    $inspect('debug onColumnVisibilityChange: ', columnVisibility);
 </script>
 
 <div class="flex flex-col w-full px-4 max-h-[calc(100vh-70px)]">
